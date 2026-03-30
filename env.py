@@ -304,8 +304,9 @@ class QuadNavEnv:
         h, w = self.ground_truth.shape
         if col < 0 or col >= w or row < 0 or row >= h:
             return True
-        for dy in range(-COLLISION_RADIUS, COLLISION_RADIUS + 1):
-            for dx in range(-COLLISION_RADIUS, COLLISION_RADIUS + 1):
+        cr_cells = max(1, round(COLLISION_RADIUS / MAP_CELL_SIZE))
+        for dy in range(-cr_cells, cr_cells + 1):
+            for dx in range(-cr_cells, cr_cells + 1):
                 ny, nx = row + dy, col + dx
                 if 0 <= ny < h and 0 <= nx < w:
                     if self.ground_truth[ny, nx] == OCCUPIED:
@@ -404,10 +405,11 @@ class QuadNavEnv:
         done = False
         info = {'success': False, 'crash': False, 'timeout': False}
 
-        diff_xy = self.goal_pos - self.quad.pos[0:2]
-        goal_angle = normalize_angle(np.arctan2(diff_xy[1], diff_xy[0]) - self.quad.euler[2])
-
-        r_yaw = -abs(goal_angle)
+        # diff_xy = self.goal_pos - self.quad.pos[0:2]
+        # goal_angle = normalize_angle(np.arctan2(diff_xy[1], diff_xy[0]) - self.quad.euler[2])
+        # r_yaw: penalizes angular deviation from goal direction (DISABLED)
+        # r_yaw = -abs(goal_angle)
+        
         r_distance = (2.0 * self.initial_goal_dist) / (self.initial_goal_dist + goal_dist) - 1.0
         r_vangular = -(action[2] ** 2)
         linear_vel = (action[0] + 1.0) / 2.0 * SPEED_LINEAR_MAX
@@ -415,7 +417,7 @@ class QuadNavEnv:
         r_vlateral = -(action[1] ** 2)
         r_obstacle = OBSTACLE_PENALTY if min_obstacle_dist < OBSTACLE_PENALTY_THRESHOLD else 0.0
 
-        reward = r_yaw + r_distance + r_obstacle + r_vangular + r_vlinear + r_vlateral - 1.0
+        reward = r_distance + r_obstacle + r_vangular + r_vlinear + r_vlateral - 1.0
 
         if collision:
             reward += REWARD_CRASH
