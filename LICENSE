@@ -1,0 +1,47 @@
+MIT License for Non-Commercial Research Use
+
+Copyright (c) 2024 Ritabrata Chakraborty, Kaushal Kishore
+BITS Pilani, CSIR-CEERI
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, and distribute copies of the Software, subject to
+the following conditions:
+
+1. PERMITTED USES:
+   - Academic research and scientific study
+   - Educational purposes and classroom instruction
+   - Personal non-commercial use
+   - Open-source contributions with non-commercial intent
+   - Derivative works for non-commercial research purposes
+
+2. RESTRICTIONS:
+   - The Software may NOT be used for commercial purposes.
+   - The Software may NOT be sold, licensed, or incorporated into commercial
+     products or services.
+   - The Software may NOT be used to generate profit directly or indirectly.
+   - Commercial use includes, but is not limited to:
+       * Selling the code or derivatives
+       * Providing commercial services using this code
+       * Using this code in for-profit applications or products
+       * Integration into commercial robotics systems
+
+3. LICENSE AND ATTRIBUTION:
+   The above copyright notice and this permission notice shall be included in
+   all copies or substantial portions of the Software.
+   
+4. DISCLAIMER:
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
+
+5. COMMERCIAL LICENSE:
+   For commercial use beyond the scope of this license, please contact the
+   author at:
+   
+   Ritabrata Chakraborty: ritabratabits@gmail.com

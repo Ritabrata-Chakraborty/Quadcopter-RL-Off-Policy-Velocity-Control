@@ -1,0 +1,47 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE / editor
+.idea/
+*.swp
+*.swo
+*~
+
+# AI agents
+.claude/
+.vscode/
+.cursor/
+.codex/
+.code/
+
+# OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Weights & Biases
+wandb/
+
+# Training and evaluation outputs (see parameter.py EXPERIMENT_DIR)
+experiments/*/train/checkpoints/
+experiments/*/train/tensorboard/
+experiments/*/train/plots/
+experiments/*/eval/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs and coverage
+*.log
+.coverage
+htmlcov/
