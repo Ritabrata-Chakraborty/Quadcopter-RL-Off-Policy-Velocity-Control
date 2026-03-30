@@ -10,9 +10,13 @@
 
 </div>
 
+## Introduction
+
 This work implements a hierarchical quadcopter-based indoor exploration framework with a **multi-critic velocity controller** for autonomous navigation in unknown environments.
 
 **Stage 1: Velocity-Based Point Navigation** involves a learned velocity controller that directly regulates forward, lateral, and angular velocities to reach goal positions. Details are provided in the Control Architecture section below.
+
+![Navigation Demo](experiments/DDPG/train/plots/gifs/outdoor_1_ep24000_success.gif)
 
 **Stage 2: Frontier-Based Exploration** uses CogniPlan for selecting exploration frontiers. We construct a path using A* search from the current location to the selected frontier and discretize it into waypoints at regular intervals. This approach enables robust navigation through maze-like environments and handles moving obstacles. The velocity controller from Stage 1 sequentially navigates between waypoints until reaching each frontier, then selects the next frontier and repeats.
 
