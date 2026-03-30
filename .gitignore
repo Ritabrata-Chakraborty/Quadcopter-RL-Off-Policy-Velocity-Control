@@ -32,12 +32,6 @@ ehthumbs.db
 # Weights & Biases
 wandb/
 
-# Training and evaluation outputs (see parameter.py EXPERIMENT_DIR)
-experiments/*/train/checkpoints/
-experiments/*/train/tensorboard/
-experiments/*/train/plots/
-experiments/*/eval/
-
 # Jupyter
 .ipynb_checkpoints/
 
