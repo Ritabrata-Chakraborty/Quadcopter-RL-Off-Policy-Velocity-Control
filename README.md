@@ -2,7 +2,7 @@
   <h1>Quadcopter RL Off-Policy Velocity Control</h1>
   <h3>Multi-Critic Off-Policy Reinforcement Learning for Quadrotor Velocity Control in Unknown Indoor Environments</h3>
   
-  [Ritabrata Chakraborty](https://github.com/caoyuhong001), Kaushal Kishore
+  [Ritabrata Chakraborty](https://ritabrata-chakraborty.github.io/Portfolio/), Kaushal Kishore
   
   <sup>BITS Pilani, CSIR-CEERI</sup>
   
