@@ -14,7 +14,7 @@
 
 This work implements a hierarchical quadcopter-based indoor exploration framework with a **multi-critic velocity controller** for autonomous navigation in unknown environments.
 
-**Stage 1: Velocity-Based Point Navigation** involves a learned velocity controller that directly regulates forward, lateral, and angular velocities to reach goal positions. Details are provided in the Control Architecture section below.
+**Stage 1: Velocity-Based Point Navigation** involves a learned velocity controller that directly regulates forward, lateral, and angular velocities to reach goal positions. Details are provided in the [Control Architecture](#control-architecture-stage-1) section below.
 
 ![Navigation Demo](experiments/DDPG/train/plots/gifs/outdoor_1_ep24000_success.gif)
 
