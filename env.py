@@ -455,9 +455,9 @@ class QuadNavEnv:
     ) -> tuple[np.ndarray, bool, dict]:
         """Multi-critic reward decomposition. Returns (reward_vec shape(3,), done, info).
 
-        Critic 1 (forward vel):                 r_distance/2 + r_vlinear           - 1/3 living
-        Critic 2 (lateral vel):  r_obstacle/2                + r_vlateral          - 1/3 living
-        Critic 3 (angular vel):  r_obstacle/2 + r_distance/2 + r_vangular + r_yaw  - 1/3 living
+        Critic 1 (forward vel):                r_distance/2 + r_vlinear          - 1/3 living
+        Critic 2 (lateral vel): r_obstacle/2                + r_vlateral         - 1/3 living
+        Critic 3 (angular vel): r_obstacle/2 + r_distance/2 + r_vangular + r_yaw - 1/3 living
 
         Terminal rewards are split equally (1/3 each) to keep summed Q magnitude
         comparable to the single-critic baseline.
