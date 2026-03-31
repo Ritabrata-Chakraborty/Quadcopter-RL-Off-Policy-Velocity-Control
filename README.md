@@ -22,57 +22,34 @@ This work implements a hierarchical quadcopter-based indoor exploration framewor
 
 ## Control Architecture (Stage 1)
 
-### Observation Space (45-dim)
+A **velocity-based controller** regulates three control axes: forward velocity ($\dot{x}$), lateral velocity ($\dot{y}$), and angular velocity ($\dot{\psi}$).
 
-The agent observes the environment through:
-- **LiDAR**: 40 binned ray distances (normalized to [0, 1]) from a 360° scan
-- **Goal Relative State**: Euclidean distance to goal (normalized), heading error to goal (in radians / π)
-- **Action History**: Previous 3 normalized action values (forward, lateral, angular)
+### Comparison Study
 
-### Action Space (3-dim)
-
-Normalized continuous actions in [−1, 1]:
-- **Forward velocity**: $\dot{x}_{\text{cmd}} = \frac{a_0 + 1}{2} \cdot v_{\max}^x$ (range: [0, 3.0 m/s])
-- **Lateral velocity**: $\dot{y}_{\text{cmd}} = a_1 \cdot v_{\max}^y$ (range: [−1.5, 1.5 m/s])
-- **Angular velocity**: $\dot{\psi}_{\text{cmd}} = a_2 \cdot \omega_{\max}$ (range: [−60°, 60°]/s)
-
-### Algorithms & Critic Strategies
-
-We benchmark three off-policy algorithms with two critic architectures:
-
-**Algorithms**: DDPG, TD3, SAC
-**Replay Methods**: Uniform sampling or Prioritized Experience Replay (PER)
-**Critic Architectures**: Single-critic baseline vs. multi-critic decomposition
+We compare three off-policy algorithms (`DDPG`, `TD3`, `SAC`) with two replay strategies:
+- **Replay Method**: Uniform sampling vs. Prioritized Experience Replay (PER)
+- **Critic Architecture**: Single critic vs. Multi-critic decomposition
 
 ### Single-Critic Baseline
+A unified critic network outputs Q-values for all three actions jointly under a shared reward signal.
 
-A unified critic network outputs a single Q-value for the state-action pair. All reward shaping components are summed into a scalar step reward.
+### Multi-Critic Decomposition (3 Critics)
+Instead of a monolithic reward, we decompose the learning problem into three specialized critics:
 
-### Multi-Critic Decomposition (3 Specialized Critics)
+| Critic | Controls | Objective |
+|--------|----------|-----------|
+| **Critic 1** | Forward velocity ($\dot{x}$) | Maximize forward speed toward goal |
+| **Critic 2** | Lateral velocity ($\dot{y}$) | Maintain safe distance from walls |
+| **Critic 3** | Angular velocity ($\dot{\psi}$) | Align quadcopter heading with motion direction |
 
-Rather than a monolithic reward, the learning problem is decomposed into three domain-specific critics:
+### Shared Reward Signals
 
-| Critic | Primary Objective | Reward Components |
-|--------|-------------------|-------------------|
-| **Critic 1** | Forward motion | $r_{\text{distance}}/2 + r_{\text{linear}}$ |
-| **Critic 2** | Obstacle avoidance | $r_{\text{obstacle}} + r_{\text{lateral}}$ |
-| **Critic 3** | Orientation alignment | $r_{\text{distance}}/2 + r_{\text{angular}} + r_{\text{yaw}}$ |
+All critics receive unified signals for episode termination:
+- **Success**: +2500 (goal reached within threshold)
+- **Crash**: −2000 (collision detected)
+- **Timeout**: −100 (max episode steps exceeded)
 
-### Reward Shaping
-
-**Step-wise rewards** at each timestep:
-- **Distance progress**: $r_{\text{distance}} = \frac{2 d_0}{d_0 + d(t)} - 1$ (where $d_0$ = initial distance, $d(t)$ = current distance)
-- **Yaw alignment**: $r_{\text{yaw}} = -|\theta_{\text{error}}|$ (heading error to goal in robot frame)
-- **Linear speed penalty**: $r_{\text{linear}} = -\left(\frac{v_{\max}^x - v_{\text{cmd}}}{v_{\max}^x}\right)^2$ (encourages fast forward motion)
-- **Lateral penalty**: $r_{\text{lateral}} = -a_1^2$ (discourages excessive lateral motion)
-- **Angular penalty**: $r_{\text{angular}} = -a_2^2$ (discourages erratic rotations)
-- **Obstacle proximity**: $r_{\text{obstacle}} = -20$ if min LiDAR distance < 1.0 m, else 0
-- **Living cost**: $-1.0$ per step (single-critic) or $-1/3$ per critic (multi-critic)
-
-**Terminal rewards** (episode end):
-- **Success**: +2500 (goal reached within 1.0 m)
-- **Collision**: −2000 (walls, out of bounds, or extreme tilt)
-- **Timeout**: −100 (exceeded max episode steps)
+Additionally, an **obstacle penalty** of −20 is applied at each step when obstacles are within a 1.0 m threshold, encouraging safe distance maintenance.
 
 ## Features
 
