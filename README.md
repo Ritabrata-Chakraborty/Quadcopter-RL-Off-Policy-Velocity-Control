@@ -12,44 +12,67 @@
 
 ## Introduction
 
-This work implements a hierarchical quadcopter-based indoor exploration framework with a **multi-critic velocity controller** for autonomous navigation in unknown environments.
+This work implements a hierarchical quadcopter-based indoor exploration framework with **off-policy reinforcement learning** for autonomous velocity-based point navigation in unknown indoor environments.
 
-**Stage 1: Velocity-Based Point Navigation** involves a learned velocity controller that directly regulates forward, lateral, and angular velocities to reach goal positions. Details are provided in the [Control Architecture](#control-architecture-stage-1) section below.
+**Stage 1: Velocity-Based Point Navigation** trains an agent to directly control three velocity axes—forward, lateral, and angular—to navigate from arbitrary start positions to goal locations. The agent perceives the environment through a 360° LiDAR scan (40 binned rays) and observes the goal position and heading error. We investigate three off-policy algorithms (**TD3**, **DDPG**, **SAC**) and compare single-critic and **multi-critic reward decomposition** strategies.
 
 ![Navigation Demo](assets/point_goal_nav.gif)
 
-**Stage 2: Frontier-Based Exploration** uses CogniPlan for selecting exploration frontiers. We construct a path using A* search from the current location to the selected frontier and discretize it into waypoints at regular intervals. This approach enables robust navigation through maze-like environments and handles moving obstacles. The velocity controller from Stage 1 sequentially navigates between waypoints until reaching each frontier, then selects the next frontier and repeats.
+**Stage 2: Frontier-Based Exploration** extends Stage 1 by using frontier detection to discover unexplored regions. A path to the selected frontier is planned via A* search and discretized into waypoints. The learned velocity controller from Stage 1 sequentially navigates waypoints, enabling robust exploration in maze-like environments. The framework gracefully handles dynamic obstacles and replans when paths become invalid.
 
 ## Control Architecture (Stage 1)
 
-A **velocity-based controller** regulates three control axes: forward velocity ($\dot{x}$), lateral velocity ($\dot{y}$), and angular velocity ($\dot{\psi}$).
+### Observation Space (45-dim)
 
-### Comparison Study
+The agent observes the environment through:
+- **LiDAR**: 40 binned ray distances (normalized to [0, 1]) from a 360° scan
+- **Goal Relative State**: Euclidean distance to goal (normalized), heading error to goal (in radians / π)
+- **Action History**: Previous 3 normalized action values (forward, lateral, angular)
 
-We compare three off-policy algorithms (`DDPG`, `TD3`, `SAC`) with two replay strategies:
-- **Replay Method**: Uniform sampling vs. Prioritized Experience Replay (PER)
-- **Critic Architecture**: Single critic vs. Multi-critic decomposition
+### Action Space (3-dim)
+
+Normalized continuous actions in [−1, 1]:
+- **Forward velocity**: $\dot{x}_{\text{cmd}} = \frac{a_0 + 1}{2} \cdot v_{\max}^x$ (range: [0, 3.0 m/s])
+- **Lateral velocity**: $\dot{y}_{\text{cmd}} = a_1 \cdot v_{\max}^y$ (range: [−1.5, 1.5 m/s])
+- **Angular velocity**: $\dot{\psi}_{\text{cmd}} = a_2 \cdot \omega_{\max}$ (range: [−60°, 60°]/s)
+
+### Algorithms & Critic Strategies
+
+We benchmark three off-policy algorithms with two critic architectures:
+
+**Algorithms**: DDPG, TD3, SAC
+**Replay Methods**: Uniform sampling or Prioritized Experience Replay (PER)
+**Critic Architectures**: Single-critic baseline vs. multi-critic decomposition
 
 ### Single-Critic Baseline
-A unified critic network outputs Q-values for all three actions jointly under a shared reward signal.
 
-### Multi-Critic Decomposition (3 Critics)
-Instead of a monolithic reward, we decompose the learning problem into three specialized critics:
+A unified critic network outputs a single Q-value for the state-action pair. All reward shaping components are summed into a scalar step reward.
 
-| Critic | Controls | Reward Signal | Objective |
-|--------|----------|---------------|-----------|
-| **Critic 1** | Forward velocity ($\dot{x}$) | Progress-based reward | Maximize forward speed toward goal |
-| **Critic 2** | Lateral velocity ($\dot{y}$) | Obstacle penalty | Maintain safe distance from walls |
-| **Critic 3** | Angular velocity ($\dot{\psi}$) | Alignment reward | Align quadcopter heading with motion direction |
+### Multi-Critic Decomposition (3 Specialized Critics)
 
-### Shared Reward Signals
+Rather than a monolithic reward, the learning problem is decomposed into three domain-specific critics:
 
-All critics receive unified signals for episode termination:
-- **Success**: +2500 (goal reached within threshold)
-- **Crash**: −2000 (collision detected)
-- **Timeout**: −100 (max episode steps exceeded)
+| Critic | Primary Objective | Reward Components |
+|--------|-------------------|-------------------|
+| **Critic 1** | Forward motion | $r_{\text{distance}}/2 + r_{\text{linear}}$ |
+| **Critic 2** | Obstacle avoidance | $r_{\text{obstacle}} + r_{\text{lateral}}$ |
+| **Critic 3** | Orientation alignment | $r_{\text{distance}}/2 + r_{\text{angular}} + r_{\text{yaw}}$ |
 
-Additionally, an **obstacle penalty** of −20 is applied at each step when obstacles are within a 1.0 m threshold, encouraging safe distance maintenance.
+### Reward Shaping
+
+**Step-wise rewards** at each timestep:
+- **Distance progress**: $r_{\text{distance}} = \frac{2 d_0}{d_0 + d(t)} - 1$ (where $d_0$ = initial distance, $d(t)$ = current distance)
+- **Yaw alignment**: $r_{\text{yaw}} = -|\theta_{\text{error}}|$ (heading error to goal in robot frame)
+- **Linear speed penalty**: $r_{\text{linear}} = -\left(\frac{v_{\max}^x - v_{\text{cmd}}}{v_{\max}^x}\right)^2$ (encourages fast forward motion)
+- **Lateral penalty**: $r_{\text{lateral}} = -a_1^2$ (discourages excessive lateral motion)
+- **Angular penalty**: $r_{\text{angular}} = -a_2^2$ (discourages erratic rotations)
+- **Obstacle proximity**: $r_{\text{obstacle}} = -20$ if min LiDAR distance < 1.0 m, else 0
+- **Living cost**: $-1.0$ per step (single-critic) or $-1/3$ per critic (multi-critic)
+
+**Terminal rewards** (episode end):
+- **Success**: +2500 (goal reached within 1.0 m)
+- **Collision**: −2000 (walls, out of bounds, or extreme tilt)
+- **Timeout**: −100 (exceeded max episode steps)
 
 ## Features
 
