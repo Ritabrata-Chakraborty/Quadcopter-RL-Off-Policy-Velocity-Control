@@ -13,9 +13,6 @@ mkdir -p "$DATASET_DIR"
 
 # name|type|asset_filename|target_dir|sha256
 ASSETS_REQUIRED=(
-  # checkpoints (two packed folders)
-  "checkpoints_cogniplan_exp_pred7|tgz|checkpoints_cogniplan_exp_pred7.tar.gz|checkpoints/cogniplan_exp_pred7|2d6023a414b02adf16351d5b4e8b2ac3d08d8e8a59b2b2df9a3ed3d703429596"
-  "checkpoints_wgan_inpainting|tgz|checkpoints_wgan_inpainting.tar.gz|checkpoints/wgan_inpainting|64f3d64cd2b524e756fe0c80fae6fe7b253ec3e26c4ad0abe3b1495ff5112e69"
   # datasets (required)
   "maps_train|tgz|maps_train.tar.gz|dataset/maps_train|28b7227320cfd7794bfe29d9be75a022e39f33ba98283aaac2f877fc5c1b49c5"
   "maps_eval|tgz|maps_eval.tar.gz|dataset/maps_eval|b5f5bfb8fe6ec3aedd857b518c162eb63d4ecc12917af643cb95f3cde580f7e5"
@@ -90,18 +87,10 @@ download_one() {
     echo "Unsupported type: $typ (expected 'tgz')"; return 1
   fi
 
-  if [[ "$target" == checkpoints/* ]]; then
-    # If the checkpoint folder already exists and is non-empty, skip
-    if [[ -d "$target_path" && -n "$(ls -A "$target_path" 2>/dev/null || true)" ]]; then
-      echo "Already exists (non-empty), skip: $target_path"
-      return 0
-    fi
-  else
-    # Dataset folders
-    if [[ -d "$target_path" && -n "$(ls -A "$target_path" 2>/dev/null || true)" ]]; then
-      echo "Already exists (non-empty), skip: $target_path"
-      return 0
-    fi
+  # If the folder already exists and is non-empty, skip
+  if [[ -d "$target_path" && -n "$(ls -A "$target_path" 2>/dev/null || true)" ]]; then
+    echo "Already exists (non-empty), skip: $target_path"
+    return 0
   fi
 
   download "$url" "$cache"
@@ -120,7 +109,7 @@ download_group() {
 usage() {
   cat <<EOF
 Usage: $(basename "$0") [required|optional|all]
-  required  -> checkpoints + maps_train + maps_eval (maps for planner training)
+  required  -> maps_train + maps_eval (maps for planner training)
   optional  -> maps_train_inpaint + maps_eval_inpaint (maps for inpainting model and planner training)
   all       -> everything
 Default: required
