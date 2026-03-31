@@ -45,7 +45,7 @@ STATE_SIZE = NUM_SCAN_SAMPLES + 5   # [40 lidar bins, goal_dist, goal_angle, pre
 ACTION_SIZE = 3                     # linear_x (forward), linear_y (lateral), angular velocity
 HIDDEN_SIZE = 512
 LOG_STD_MIN = -20                   # SAC log-std clamp bounds (unconditional so model.py can import)
-LOG_STD_MAX = 2 
+LOG_STD_MAX = 2
 
 # ------------------------------------------------------------------
 # Training
@@ -84,7 +84,7 @@ if EXPERIMENT_TYPE == 'DDPG':
 if EXPERIMENT_TYPE == 'SAC':
     POLICY_UPDATE_FREQUENCY = 1
     SAC_ALPHA_INIT = 0.2
-    SAC_ALPHA_LR = 0.004          # same as main LR
+    SAC_ALPHA_LR = 0.004               # same as main LR
     SAC_TARGET_ENTROPY = -ACTION_SIZE  # = -3
 
 # ------------------------------------------------------------------

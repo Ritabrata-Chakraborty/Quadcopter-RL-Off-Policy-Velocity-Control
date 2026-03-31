@@ -108,10 +108,28 @@ def log_metrics(
     """Log averaged metrics to TensorBoard and wandb."""
     td = np.array(training_data)
     means = list(np.nanmean(td, axis=0))
-    critic_loss, actor_loss, travel_dist, success_rate, total_reward, goal_distance = means
 
+    if USE_MULTI_CRITIC:
+        # Extract critic losses (total + individual)
+        critic_loss = means[0]
+        actor_loss = means[1]
+        num_critics = P.NUM_CRITICS
+        individual_losses = means[2:2+num_critics]
+        perf_start_idx = 2 + num_critics
+        travel_dist, success_rate, total_reward, goal_distance = means[perf_start_idx:perf_start_idx+4]
+    else:
+        critic_loss, actor_loss, travel_dist, success_rate, total_reward, goal_distance = means
+
+    # Log total critic loss
     writer.add_scalar('Losses/Critic Loss', critic_loss, curr_episode)
     writer.add_scalar('Losses/Actor Loss', actor_loss, curr_episode)
+
+    # Log individual critic losses for multi-critic
+    if USE_MULTI_CRITIC:
+        for i, loss in enumerate(individual_losses):
+            writer.add_scalar(f'Losses/Critic_{i}_Loss', loss, curr_episode)
+
+    # Log performance metrics
     writer.add_scalar('Perf/Reward', total_reward, curr_episode)
     writer.add_scalar('Perf/Travel Distance', travel_dist, curr_episode)
     writer.add_scalar('Perf/Success Rate', success_rate, curr_episode)
@@ -120,7 +138,7 @@ def log_metrics(
 
     if wandb_run:
         import wandb
-        wandb.log({
+        wandb_dict = {
             'Episode': curr_episode,
             'Buffer Size': buffer_size,
             'Critic Loss': critic_loss,
@@ -129,7 +147,14 @@ def log_metrics(
             'Success Rate': success_rate,
             'Travel Distance': travel_dist,
             'Goal Distance': goal_distance,
-        }, step=curr_episode)
+        }
+
+        # Log individual critic losses for multi-critic
+        if USE_MULTI_CRITIC:
+            for i, loss in enumerate(individual_losses):
+                wandb_dict[f'Critic_{i}_Loss'] = loss
+
+        wandb.log(wandb_dict, step=curr_episode)
 
 
 # ------------------------------------------------------------------
@@ -228,6 +253,7 @@ def main() -> None:
     last_actor_loss = 0.0
     training_active = False
     policy_start_episode = 0
+    individual_critic_losses = []  # Track individual critic losses for multi-critic logging
 
     # Resume from checkpoint
     if LOAD_MODEL:
@@ -341,15 +367,18 @@ def main() -> None:
                             critic_qs = critic(s, a)
                             all_td1, all_td2 = [], []
                             critic_loss = torch.tensor(0.0, device=device)
+                            individual_losses_step = []  # Track individual critic losses
                             for i, (q1_i, q2_i) in enumerate(critic_qs):
                                 td1_i = loss_fn(q1_i, q_targets[i])
                                 td2_i = loss_fn(q2_i, q_targets[i])
                                 all_td1.append(td1_i)
                                 all_td2.append(td2_i)
                                 if w is not None:
-                                    critic_loss = critic_loss + (w * td1_i).mean() + (w * td2_i).mean()
+                                    critic_i_loss = (w * td1_i).mean() + (w * td2_i).mean()
                                 else:
-                                    critic_loss = critic_loss + td1_i.mean() + td2_i.mean()
+                                    critic_i_loss = td1_i.mean() + td2_i.mean()
+                                critic_loss = critic_loss + critic_i_loss
+                                individual_losses_step.append(critic_i_loss.item())
                         else:
                             q1, q2 = critic(s, a)
                             td1 = loss_fn(q1, q_target)
@@ -364,6 +393,8 @@ def main() -> None:
                         nn.utils.clip_grad_norm_(critic.parameters(), max_norm=2.0)
                         critic_optimizer.step()
                         critic_loss_val = critic_loss.item()
+                        if USE_MULTI_CRITIC:
+                            individual_critic_losses.append(individual_losses_step)
 
                         if P.USE_PER:
                             if USE_MULTI_CRITIC:
@@ -404,13 +435,16 @@ def main() -> None:
                             critic_qs = critic(s, a)
                             all_td = []
                             critic_loss = torch.tensor(0.0, device=device)
+                            individual_losses_step = []  # Track individual critic losses
                             for i, q_i in enumerate(critic_qs):
                                 td_i = loss_fn(q_i, q_targets[i])
                                 all_td.append(td_i)
                                 if w is not None:
-                                    critic_loss = critic_loss + (w * td_i).mean()
+                                    critic_i_loss = (w * td_i).mean()
                                 else:
-                                    critic_loss = critic_loss + td_i.mean()
+                                    critic_i_loss = td_i.mean()
+                                critic_loss = critic_loss + critic_i_loss
+                                individual_losses_step.append(critic_i_loss.item())
                         else:
                             q = critic(s, a)
                             td_err = loss_fn(q, q_target)
@@ -424,6 +458,8 @@ def main() -> None:
                         nn.utils.clip_grad_norm_(critic.parameters(), max_norm=2.0)
                         critic_optimizer.step()
                         critic_loss_val = critic_loss.item()
+                        if USE_MULTI_CRITIC:
+                            individual_critic_losses.append(individual_losses_step)
 
                         if P.USE_PER:
                             if USE_MULTI_CRITIC:
@@ -467,15 +503,18 @@ def main() -> None:
                             critic_qs = critic(s, a)
                             all_td1, all_td2 = [], []
                             critic_loss = torch.tensor(0.0, device=device)
+                            individual_losses_step = []  # Track individual critic losses
                             for i, (q1_i, q2_i) in enumerate(critic_qs):
                                 td1_i = loss_fn(q1_i, q_targets[i])
                                 td2_i = loss_fn(q2_i, q_targets[i])
                                 all_td1.append(td1_i)
                                 all_td2.append(td2_i)
                                 if w is not None:
-                                    critic_loss = critic_loss + (w * td1_i).mean() + (w * td2_i).mean()
+                                    critic_i_loss = (w * td1_i).mean() + (w * td2_i).mean()
                                 else:
-                                    critic_loss = critic_loss + td1_i.mean() + td2_i.mean()
+                                    critic_i_loss = td1_i.mean() + td2_i.mean()
+                                critic_loss = critic_loss + critic_i_loss
+                                individual_losses_step.append(critic_i_loss.item())
                         else:
                             q1, q2 = critic(s, a)
                             td1 = loss_fn(q1, q_target)
@@ -490,6 +529,8 @@ def main() -> None:
                         nn.utils.clip_grad_norm_(critic.parameters(), max_norm=2.0)
                         critic_optimizer.step()
                         critic_loss_val = critic_loss.item()
+                        if USE_MULTI_CRITIC:
+                            individual_critic_losses.append(individual_losses_step)
 
                         if P.USE_PER:
                             if USE_MULTI_CRITIC:
@@ -521,7 +562,13 @@ def main() -> None:
                         soft_update(critic_target, critic, TAU)
 
                 perf_data = [np.nanmean(perf_metrics[n]) if perf_metrics[n] else 0.0 for n in metric_names]
-                training_data.append([critic_loss_val, last_actor_loss, *perf_data])
+
+                # Append training data with individual critic losses if multi-critic
+                if USE_MULTI_CRITIC and individual_critic_losses:
+                    avg_individual_losses = np.nanmean(individual_critic_losses, axis=0).tolist()
+                    training_data.append([critic_loss_val, last_actor_loss, *avg_individual_losses, *perf_data])
+                else:
+                    training_data.append([critic_loss_val, last_actor_loss, *perf_data])
 
             # Logging
             if len(training_data) >= SUMMARY_WINDOW:
@@ -529,6 +576,7 @@ def main() -> None:
                             writer, wandb_run)
                 training_data = []
                 perf_metrics = {n: [] for n in metric_names}
+                individual_critic_losses = []  # Reset after logging
 
             weights_set = get_weights(actor, device, local_device)
 
