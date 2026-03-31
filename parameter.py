@@ -109,10 +109,10 @@ HOVER_ALTITUDE = -1.0
 # Map
 # ------------------------------------------------------------------
 
-TRAIN_MAPS_DIR = 'dataset/maps_train/outdoor'
-TRAIN_GOALS_DIR = 'dataset/maps_train/outdoor_goals'
-EVAL_MAPS_DIR = 'dataset/maps_eval/outdoor'
-EVAL_GOALS_DIR = 'dataset/maps_eval/outdoor_goals'
+TRAIN_MAPS_DIR = 'dataset/maps_train/simple'
+TRAIN_GOALS_DIR = 'dataset/maps_train/simple_goals'
+EVAL_MAPS_DIR = 'dataset/maps_eval/simple'
+EVAL_GOALS_DIR = 'dataset/maps_eval/simple_goals'
 MAP_CELL_SIZE = 0.25                                    # metres per cell
 MAP_PIXELS = 250
 MAP_SIDE_M = (MAP_PIXELS - 1) * MAP_CELL_SIZE           # metres
