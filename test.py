@@ -213,14 +213,30 @@ def save_training_plots(metrics: dict, eval_dir: str) -> None:
         elif 'Perf' in metric_name:
             perf_metrics[metric_name.replace('Perf/', '')] = (steps, vals)
 
-    # Create losses plot (2x2 grid, up to 4 subplots)
+    # Create losses plot (dynamic grid based on number of losses)
     if losses:
-        fig, axes = plt.subplots(2, 2, figsize=(15, 10))
+        n_losses = len(losses)
+        # For multi-critic: 5 losses (Critic Loss + Critic_0/1/2_Loss + Actor Loss)
+        # For single-critic: 2 losses (Critic Loss + Actor Loss)
+        cols = min(3, n_losses)  # Max 3 columns
+        rows = (n_losses + cols - 1) // cols  # Calculate needed rows
+        figsize = (5*cols, 4*rows)
+
+        fig, axes = plt.subplots(rows, cols, figsize=figsize)
         fig.suptitle(f'{EXPERIMENT_NAME} - Training Losses', fontsize=14, fontweight='bold')
 
+        # Handle case where axes is 1D (only 1 row) or scalar (only 1 subplot)
+        if n_losses == 1:
+            axes = np.array([axes])
+        elif rows == 1:
+            axes = axes.reshape(1, -1)
+        else:
+            axes = axes.reshape(rows, cols) if axes.ndim == 1 else axes
+
         ax_idx = 0
-        for metric_name, (steps, vals) in list(losses.items())[:4]:
-            ax = axes.flat[ax_idx]
+        for metric_name, (steps, vals) in losses.items():
+            row, col = ax_idx // cols, ax_idx % cols
+            ax = axes[row, col] if axes.ndim > 1 else axes[ax_idx]
             ema_vals = compute_ema(vals, alpha=0.1)  # beta=0.9 smoothing
             ax.plot(steps, vals, linewidth=0.8, color='#CCCCCC', alpha=0.6, label='Raw')
             ax.plot(steps, ema_vals, linewidth=2.0, color='#1565C0', label='EMA (β=0.9)')
@@ -232,14 +248,16 @@ def save_training_plots(metrics: dict, eval_dir: str) -> None:
             ax_idx += 1
 
         # Hide unused subplots
-        for i in range(ax_idx, 4):
-            axes.flat[i].set_visible(False)
+        for i in range(ax_idx, rows * cols):
+            row, col = i // cols, i % cols
+            ax = axes[row, col] if axes.ndim > 1 else axes[i]
+            ax.set_visible(False)
 
         fig.tight_layout()
         losses_path = os.path.join(eval_dir, 'plots', 'Training_Losses.png')
         fig.savefig(losses_path, dpi=150)
         plt.close(fig)
-        print(f"Training losses plot saved: {losses_path}")
+        print(f"Training losses plot saved: {losses_path} ({n_losses} loss curves)")
 
     # Create performance metrics plot (dynamic grid based on number of metrics)
     if perf_metrics:

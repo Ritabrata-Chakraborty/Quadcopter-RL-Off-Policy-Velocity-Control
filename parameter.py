@@ -32,7 +32,7 @@ CHECKPOINT_EVERY = 500
 # Wandb
 # ------------------------------------------------------------------
 
-WANDB_ENABLED = True
+WANDB_ENABLED = False
 WANDB_PROJECT = 'DRL-NAV'
 WANDB_ENTITY = None
 
