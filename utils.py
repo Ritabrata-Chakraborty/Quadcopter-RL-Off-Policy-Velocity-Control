@@ -7,6 +7,7 @@ When present in episode ``metrics`` (from goals JSON), ``start_corner_pixels`` a
 ``goal_corner_pixels`` align goal/start overlays with painted map squares.
 """
 
+import math
 import os
 from typing import Any, Optional
 
@@ -16,6 +17,7 @@ from numpy import cos, pi, sin
 import torch
 
 from parameter import (
+    DRONE_VIZ_SPAN_CELLS,
     DRL_STEP_DURATION,
     MAP_CELL_SIZE,
     MAX_GOAL_DISTANCE,
@@ -35,11 +37,7 @@ from parameter import (
 
 def normalize_angle(angle: float) -> float:
     """Wrap angle to [-pi, pi]."""
-    while angle > pi:
-        angle -= 2 * pi
-    while angle < -pi:
-        angle += 2 * pi
-    return angle
+    return math.atan2(math.sin(angle), math.cos(angle))
 
 
 # ------------------------------------------------------------------
@@ -146,12 +144,12 @@ class OUNoise:
 class ReplayBuffer:
     """Fixed-capacity replay buffer using pre-allocated numpy arrays."""
 
-    def __init__(self, capacity: int):
+    def __init__(self, capacity: int, reward_dim: int = 1):
         from parameter import STATE_SIZE, ACTION_SIZE
         self.capacity = capacity
         self.states = np.zeros((capacity, STATE_SIZE), dtype=np.float32)
         self.actions = np.zeros((capacity, ACTION_SIZE), dtype=np.float32)
-        self.rewards = np.zeros((capacity, 1), dtype=np.float32)
+        self.rewards = np.zeros((capacity, reward_dim), dtype=np.float32)
         self.next_states = np.zeros((capacity, STATE_SIZE), dtype=np.float32)
         self.dones = np.zeros((capacity, 1), dtype=np.float32)
         self.write = 0
@@ -260,6 +258,7 @@ class PrioritizedReplayBuffer:
         beta_start: float = 0.4,
         beta_frames: int = 100_000,
         epsilon: float = 1e-6,
+        reward_dim: int = 1,
     ):
         self.tree = SumTree(capacity)
         self.alpha = alpha
@@ -268,6 +267,7 @@ class PrioritizedReplayBuffer:
         self.epsilon = epsilon
         self.max_priority = 1.0
         self.frame = 0
+        self.reward_dim = reward_dim
 
     def get_beta(self) -> float:
         return min(1.0, self.beta_start + self.frame * (1.0 - self.beta_start) / self.beta_frames)
@@ -280,8 +280,8 @@ class PrioritizedReplayBuffer:
         next_state: np.ndarray,
         done: np.ndarray,
     ) -> None:
-        priority = self.max_priority ** self.alpha
-        self.tree.add(priority, (state, action, reward, next_state, done))
+        # max_priority already stores (|δ| + ε)^α; do not re-exponentiate.
+        self.tree.add(self.max_priority, (state, action, reward, next_state, done))
 
     def sample(
         self, batch_size: int,
@@ -292,7 +292,7 @@ class PrioritizedReplayBuffer:
         priorities = np.empty(batch_size, dtype=np.float64)
         states = np.empty((batch_size, STATE_SIZE), dtype=np.float32)
         actions = np.empty((batch_size, ACTION_SIZE), dtype=np.float32)
-        rewards = np.empty((batch_size, 1), dtype=np.float32)
+        rewards = np.empty((batch_size, self.reward_dim), dtype=np.float32)
         next_states = np.empty((batch_size, STATE_SIZE), dtype=np.float32)
         dones = np.empty((batch_size, 1), dtype=np.float32)
 
@@ -355,10 +355,6 @@ GOAL_COLOR       = '#FF1744'
 START_COLOR      = '#00E676'
 
 
-def viz_reward(metrics: dict) -> float:
-    return float(metrics.get('total_reward', metrics.get('reward', 0.0)))
-
-
 def navigation_frame_stats(
     traj_xy: list,
     goal_pos_xy,
@@ -378,7 +374,7 @@ def navigation_frame_stats(
     if cumulative_rewards is not None and step_idx < len(cumulative_rewards):
         cum_r = float(cumulative_rewards[step_idx])
     elif final_metrics is not None:
-        cum_r = viz_reward(final_metrics)
+        cum_r = float(final_metrics.get('total_reward', final_metrics.get('reward', 0.0)))
     else:
         cum_r = 0.0
     return cum_r, goal_dist, travel_dist
@@ -395,7 +391,7 @@ def plot_agent_marker(
     """SimCon-style X cross with motor tips and center dot."""
     from env import world_to_cell
 
-    span_m = 10 * MAP_CELL_SIZE
+    span_m = DRONE_VIZ_SPAN_CELLS * MAP_CELL_SIZE
     arm_half = 0.5 * span_m
     c0, r0 = world_to_cell(world_x, world_y)
     r0 = map_height - 1 - r0
@@ -508,9 +504,9 @@ def draw_goal_start_markers(
     map_height: int,
     metrics: dict,
     gc: int,
-    gr_flipped: float,
+    gr_flipped: int,
     sc: int,
-    sr_flipped: float,
+    sr_flipped: int,
 ) -> None:
     """Draw goal/start overlays: JSON corner pixels when present, else world→cell fallback."""
     g_rect = parse_corner_pixels_dict(metrics.get('goal_corner_pixels'))
@@ -810,6 +806,8 @@ def save_navigation_episode_outputs(
         experiment_name=experiment_name, cumulative_rewards=cumulative_rewards,
         lidar_kinds=last_kinds, checkpoint_ep=checkpoint_ep, map_name=map_name,
         action_snapshots=action_snapshots,
+        traj_roll=traj_roll, traj_pitch=traj_pitch,
+        trajectory=trajectory,
     )
     png_path = os.path.join(plots_dir, f'{stem}.png')
     fig_final.savefig(png_path, dpi=150)

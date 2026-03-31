@@ -3,7 +3,7 @@
 import torch
 import torch.nn as nn
 
-from parameter import ACTION_SIZE, HIDDEN_SIZE, STATE_SIZE
+from parameter import ACTION_SIZE, HIDDEN_SIZE, LOG_STD_MAX, LOG_STD_MIN, NUM_CRITICS, STATE_SIZE
 
 
 # ------------------------------------------------------------------
@@ -123,6 +123,10 @@ class DDPGCritic(nn.Module):
         x = torch.relu(self.l3(x))
         return self.l4(x)
 
+    def Q1_forward(self, states: torch.Tensor, actions: torch.Tensor) -> torch.Tensor:
+        """Alias for forward (unified interface with multi-critic)."""
+        return self.forward(states, actions)
+
 
 # ------------------------------------------------------------------
 # SAC Actor (stochastic with reparameterization trick)
@@ -133,9 +137,6 @@ class SACActor(nn.Module):
 
     Uses reparameterization trick with tanh squashing.
     """
-
-    LOG_STD_MIN = -20
-    LOG_STD_MAX = 2
 
     def __init__(
         self,
@@ -165,7 +166,7 @@ class SACActor(nn.Module):
         x = torch.relu(self.fa1(states))
         x = torch.relu(self.fa2(x))
         mean = self.mean_head(x)
-        log_std = torch.clamp(self.log_std_head(x), self.LOG_STD_MIN, self.LOG_STD_MAX)
+        log_std = torch.clamp(self.log_std_head(x), LOG_STD_MIN, LOG_STD_MAX)
         std = log_std.exp()
 
         normal = torch.distributions.Normal(mean, std)
@@ -177,3 +178,63 @@ class SACActor(nn.Module):
         log_prob = log_prob.sum(dim=-1, keepdim=True)
 
         return action, log_prob
+
+
+# ------------------------------------------------------------------
+# Multi-Critic wrappers
+# ------------------------------------------------------------------
+
+class MultiCritic(nn.Module):
+    """N independent twin-Q critics for TD3/SAC multi-critic decomposition.
+
+    forward()    -> list of N (Q1_i, Q2_i) tuples
+    Q1_forward() -> sum of Q1 across all critics (used for actor loss)
+    """
+
+    def __init__(
+        self,
+        state_size: int = STATE_SIZE,
+        action_size: int = ACTION_SIZE,
+        hidden_size: int = HIDDEN_SIZE,
+        num_critics: int = NUM_CRITICS,
+    ):
+        super().__init__()
+        self.critics = nn.ModuleList(
+            [Critic(state_size, action_size, hidden_size) for _ in range(num_critics)]
+        )
+
+    def forward(
+        self, states: torch.Tensor, actions: torch.Tensor
+    ) -> list:
+        return [c(states, actions) for c in self.critics]
+
+    def Q1_forward(self, states: torch.Tensor, actions: torch.Tensor) -> torch.Tensor:
+        return sum(c.Q1_forward(states, actions) for c in self.critics)
+
+
+class MultiDDPGCritic(nn.Module):
+    """N independent single-Q critics for DDPG multi-critic decomposition.
+
+    forward()    -> list of N Q tensors
+    Q1_forward() -> sum of Q across all critics (used for actor loss)
+    """
+
+    def __init__(
+        self,
+        state_size: int = STATE_SIZE,
+        action_size: int = ACTION_SIZE,
+        hidden_size: int = HIDDEN_SIZE,
+        num_critics: int = NUM_CRITICS,
+    ):
+        super().__init__()
+        self.critics = nn.ModuleList(
+            [DDPGCritic(state_size, action_size, hidden_size) for _ in range(num_critics)]
+        )
+
+    def forward(
+        self, states: torch.Tensor, actions: torch.Tensor
+    ) -> list:
+        return [c(states, actions) for c in self.critics]
+
+    def Q1_forward(self, states: torch.Tensor, actions: torch.Tensor) -> torch.Tensor:
+        return sum(c(states, actions) for c in self.critics)

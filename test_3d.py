@@ -31,10 +31,10 @@ from parameter import (
     SPEED_LINEAR_MAX,
     SPEED_LINEAR_Y_MAX,
 )
+from env import CmdVelTrajectory
 
 
-import utils as _root_utils
-normalize_angle = _root_utils.normalize_angle
+import utils  # Cache root utils before SimCon's 'utils' takes over.
 del sys.modules['utils']
 
 # ------------------------------------------------------------------
@@ -50,31 +50,6 @@ from ctrl import Control
 from quadFiles.quad import Quadcopter
 from utils.windModel import Wind
 
-
-# ------------------------------------------------------------------
-# Trajectory adapter (matches QuadNavEnv cmd-vel mode)
-# ------------------------------------------------------------------
-
-
-class CmdVelTrajectory:
-    """Velocity-command trajectory: ``xy_vel_z_pos`` with fixed hover height."""
-
-    def __init__(self, hover_altitude: float = HOVER_ALTITUDE) -> None:
-        self.ctrlType = "xy_vel_z_pos"
-        self.yawType = 1
-        self.xyzType = 0
-        self.sDes = np.zeros(19)
-        self.sDes[2] = hover_altitude
-        self.des_yaw = 0.0
-        self.wps = np.array([[0.0, 0.0, hover_altitude]])
-
-    def set_cmd_vel(self, linear_vel: float, lateral_vel: float, angular_vel: float, yaw: float, dt: float) -> None:
-        self.sDes[3] = linear_vel * np.cos(yaw) + lateral_vel * (-np.sin(yaw))
-        self.sDes[4] = linear_vel * np.sin(yaw) + lateral_vel * np.cos(yaw)
-        self.sDes[5] = 0.0
-        self.des_yaw += angular_vel * dt
-        self.des_yaw = normalize_angle(self.des_yaw)
-        self.sDes[14] = self.des_yaw
 
 
 # ------------------------------------------------------------------

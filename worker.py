@@ -76,12 +76,12 @@ class Worker:
             self.episode_buffer.append((
                 state.copy(),
                 action.copy(),
-                np.array([reward], dtype=np.float32),
+                reward if isinstance(reward, np.ndarray) else np.array([reward], dtype=np.float32),
                 next_state.copy(),
                 np.array([float(done)], dtype=np.float32),
             ))
 
-            total_reward += reward
+            total_reward += float(reward.sum()) if isinstance(reward, np.ndarray) else reward
             state = next_state
 
             if self.save_image:
@@ -89,7 +89,7 @@ class Worker:
                 self.trajectory_yaw.append(float(self.env.quad.euler[2]))
                 self.trajectory_roll.append(float(self.env.quad.euler[0]))
                 self.trajectory_pitch.append(float(self.env.quad.euler[1]))
-                self.cumulative_rewards.append(self.cumulative_rewards[-1] + float(reward))
+                self.cumulative_rewards.append(self.cumulative_rewards[-1] + (float(reward.sum()) if isinstance(reward, np.ndarray) else float(reward)))
                 self.belief_snapshots.append(self.env.robot_belief.copy())
                 self.lidar_snapshots.append(self.env.get_lidar())
                 self.action_snapshots.append(action.copy())

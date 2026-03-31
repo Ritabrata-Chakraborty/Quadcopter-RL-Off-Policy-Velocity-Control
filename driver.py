@@ -17,7 +17,7 @@ import yaml
 from torch.utils.tensorboard import SummaryWriter
 
 import parameter as P
-from model import Actor, Critic, DDPGCritic, SACActor
+from model import Actor, Critic, DDPGCritic, MultiCritic, MultiDDPGCritic, SACActor
 from parameter import (
     ACTION_SIZE,
     BATCH_SIZE,
@@ -41,6 +41,7 @@ from parameter import (
     TRAIN_PLOTS_DIR,
     USE_GPU,
     USE_GPU_GLOBAL,
+    USE_MULTI_CRITIC,
     WANDB_ENABLED,
     WANDB_ENTITY,
     WANDB_PROJECT,
@@ -87,6 +88,7 @@ def save_checkpoint(
         "episode": episode,
         "total_steps": total_steps,
         "experiment_type": EXPERIMENT_TYPE,
+        "multi_critic": USE_MULTI_CRITIC,
     }
     if log_alpha is not None:
         checkpoint["log_alpha"] = log_alpha.detach().cpu()
@@ -177,19 +179,22 @@ def main() -> None:
     if EXPERIMENT_TYPE == 'TD3':
         actor = Actor(STATE_SIZE, ACTION_SIZE, HIDDEN_SIZE).to(device)
         actor_target = Actor(STATE_SIZE, ACTION_SIZE, HIDDEN_SIZE).to(device)
-        critic = Critic(STATE_SIZE, ACTION_SIZE, HIDDEN_SIZE).to(device)
-        critic_target = Critic(STATE_SIZE, ACTION_SIZE, HIDDEN_SIZE).to(device)
+        CriticCls = MultiCritic if USE_MULTI_CRITIC else Critic
+        critic = CriticCls(STATE_SIZE, ACTION_SIZE, HIDDEN_SIZE).to(device)
+        critic_target = CriticCls(STATE_SIZE, ACTION_SIZE, HIDDEN_SIZE).to(device)
 
     elif EXPERIMENT_TYPE == 'DDPG':
         actor = Actor(STATE_SIZE, ACTION_SIZE, HIDDEN_SIZE).to(device)
         actor_target = Actor(STATE_SIZE, ACTION_SIZE, HIDDEN_SIZE).to(device)
-        critic = DDPGCritic(STATE_SIZE, ACTION_SIZE, HIDDEN_SIZE).to(device)
-        critic_target = DDPGCritic(STATE_SIZE, ACTION_SIZE, HIDDEN_SIZE).to(device)
+        CriticCls = MultiDDPGCritic if USE_MULTI_CRITIC else DDPGCritic
+        critic = CriticCls(STATE_SIZE, ACTION_SIZE, HIDDEN_SIZE).to(device)
+        critic_target = CriticCls(STATE_SIZE, ACTION_SIZE, HIDDEN_SIZE).to(device)
 
     elif EXPERIMENT_TYPE == 'SAC':
         actor = SACActor(STATE_SIZE, ACTION_SIZE, HIDDEN_SIZE).to(device)
-        critic = Critic(STATE_SIZE, ACTION_SIZE, HIDDEN_SIZE).to(device)
-        critic_target = Critic(STATE_SIZE, ACTION_SIZE, HIDDEN_SIZE).to(device)
+        CriticCls = MultiCritic if USE_MULTI_CRITIC else Critic
+        critic = CriticCls(STATE_SIZE, ACTION_SIZE, HIDDEN_SIZE).to(device)
+        critic_target = CriticCls(STATE_SIZE, ACTION_SIZE, HIDDEN_SIZE).to(device)
         log_alpha = torch.tensor(
             [np.log(P.SAC_ALPHA_INIT)], dtype=torch.float32,
             requires_grad=True, device=device,
@@ -209,12 +214,14 @@ def main() -> None:
     critic_optimizer = optim.AdamW(critic.parameters(), lr=LR)
     loss_fn = nn.SmoothL1Loss(reduction='none')
 
+    _reward_dim = P.NUM_CRITICS if USE_MULTI_CRITIC else 1
     if P.USE_PER:
         replay_buffer = PrioritizedReplayBuffer(
             REPLAY_SIZE, P.PER_ALPHA, P.PER_BETA_START, P.PER_BETA_FRAMES, P.PER_EPSILON,
+            reward_dim=_reward_dim,
         )
     else:
-        replay_buffer = ReplayBuffer(REPLAY_SIZE)
+        replay_buffer = ReplayBuffer(REPLAY_SIZE, reward_dim=_reward_dim)
 
     curr_episode = 0
     total_steps = 0
@@ -227,6 +234,11 @@ def main() -> None:
         ckpt = os.path.join(CHECKPOINT_DIR, 'latest.pth')
         print(f'Loading model from {ckpt}...')
         checkpoint = torch.load(ckpt, map_location=device)
+        if checkpoint.get('multi_critic', False) != USE_MULTI_CRITIC:
+            raise ValueError(
+                f"Checkpoint has multi_critic={checkpoint.get('multi_critic', False)} "
+                f"but USE_MULTI_CRITIC={USE_MULTI_CRITIC}. Use a matching checkpoint."
+            )
         actor.load_state_dict(checkpoint['actor_model'])
         critic.load_state_dict(checkpoint['critic_model'])
         if actor_target is not None and checkpoint.get('actor_target_model') is not None:
@@ -315,16 +327,37 @@ def main() -> None:
                             noise = (torch.randn_like(a) * P.POLICY_NOISE).clamp(
                                 -P.POLICY_NOISE_CLIP, P.POLICY_NOISE_CLIP)
                             next_action = (actor_target(ns) + noise).clamp(-1.0, 1.0)
-                            q1_next, q2_next = critic_target(ns, next_action)
-                            q_target = r + (1.0 - d) * GAMMA * torch.min(q1_next, q2_next)
+                            if USE_MULTI_CRITIC:
+                                target_qs = critic_target(ns, next_action)
+                                q_targets = [
+                                    r[:, i:i+1] + (1.0 - d) * GAMMA * torch.min(q1_i, q2_i)
+                                    for i, (q1_i, q2_i) in enumerate(target_qs)
+                                ]
+                            else:
+                                q1_next, q2_next = critic_target(ns, next_action)
+                                q_target = r + (1.0 - d) * GAMMA * torch.min(q1_next, q2_next)
 
-                        q1, q2 = critic(s, a)
-                        td1 = loss_fn(q1, q_target)
-                        td2 = loss_fn(q2, q_target)
-                        if w is not None:
-                            critic_loss = (w * td1).mean() + (w * td2).mean()
+                        if USE_MULTI_CRITIC:
+                            critic_qs = critic(s, a)
+                            all_td1, all_td2 = [], []
+                            critic_loss = torch.tensor(0.0, device=device)
+                            for i, (q1_i, q2_i) in enumerate(critic_qs):
+                                td1_i = loss_fn(q1_i, q_targets[i])
+                                td2_i = loss_fn(q2_i, q_targets[i])
+                                all_td1.append(td1_i)
+                                all_td2.append(td2_i)
+                                if w is not None:
+                                    critic_loss = critic_loss + (w * td1_i).mean() + (w * td2_i).mean()
+                                else:
+                                    critic_loss = critic_loss + td1_i.mean() + td2_i.mean()
                         else:
-                            critic_loss = td1.mean() + td2.mean()
+                            q1, q2 = critic(s, a)
+                            td1 = loss_fn(q1, q_target)
+                            td2 = loss_fn(q2, q_target)
+                            if w is not None:
+                                critic_loss = (w * td1).mean() + (w * td2).mean()
+                            else:
+                                critic_loss = td1.mean() + td2.mean()
 
                         critic_optimizer.zero_grad()
                         critic_loss.backward()
@@ -333,10 +366,14 @@ def main() -> None:
                         critic_loss_val = critic_loss.item()
 
                         if P.USE_PER:
-                            td_errors = torch.max(td1, td2).detach().cpu().numpy().flatten()
+                            if USE_MULTI_CRITIC:
+                                per_td = torch.stack([torch.max(td1_i, td2_i) for td1_i, td2_i in zip(all_td1, all_td2)])
+                                td_errors = per_td.max(dim=0).values.detach().cpu().numpy().flatten()
+                            else:
+                                td_errors = torch.max(td1, td2).detach().cpu().numpy().flatten()
                             replay_buffer.update_priorities(per_indices, td_errors)
 
-                        # Delayed actor update
+                        # Delayed actor update — Q1_forward sums all critics in multi-critic mode
                         if total_steps % POLICY_UPDATE_FREQUENCY == 0:
                             actor_loss = -critic.Q1_forward(s, actor(s)).mean()
 
@@ -353,15 +390,34 @@ def main() -> None:
                         # Critic update (single Q, no target smoothing)
                         with torch.no_grad():
                             next_action = actor_target(ns)
-                            q_next = critic_target(ns, next_action)
-                            q_target = r + (1.0 - d) * GAMMA * q_next
+                            if USE_MULTI_CRITIC:
+                                q_nexts = critic_target(ns, next_action)
+                                q_targets = [
+                                    r[:, i:i+1] + (1.0 - d) * GAMMA * q_i
+                                    for i, q_i in enumerate(q_nexts)
+                                ]
+                            else:
+                                q_next = critic_target(ns, next_action)
+                                q_target = r + (1.0 - d) * GAMMA * q_next
 
-                        q = critic(s, a)
-                        td_err = loss_fn(q, q_target)
-                        if w is not None:
-                            critic_loss = (w * td_err).mean()
+                        if USE_MULTI_CRITIC:
+                            critic_qs = critic(s, a)
+                            all_td = []
+                            critic_loss = torch.tensor(0.0, device=device)
+                            for i, q_i in enumerate(critic_qs):
+                                td_i = loss_fn(q_i, q_targets[i])
+                                all_td.append(td_i)
+                                if w is not None:
+                                    critic_loss = critic_loss + (w * td_i).mean()
+                                else:
+                                    critic_loss = critic_loss + td_i.mean()
                         else:
-                            critic_loss = td_err.mean()
+                            q = critic(s, a)
+                            td_err = loss_fn(q, q_target)
+                            if w is not None:
+                                critic_loss = (w * td_err).mean()
+                            else:
+                                critic_loss = td_err.mean()
 
                         critic_optimizer.zero_grad()
                         critic_loss.backward()
@@ -370,11 +426,15 @@ def main() -> None:
                         critic_loss_val = critic_loss.item()
 
                         if P.USE_PER:
-                            td_errors = td_err.detach().cpu().numpy().flatten()
+                            if USE_MULTI_CRITIC:
+                                per_td = torch.stack(all_td)
+                                td_errors = per_td.max(dim=0).values.detach().cpu().numpy().flatten()
+                            else:
+                                td_errors = td_err.detach().cpu().numpy().flatten()
                             replay_buffer.update_priorities(per_indices, td_errors)
 
-                        # Actor update every step
-                        actor_loss = -critic(s, actor(s)).mean()
+                        # Actor update every step — Q1_forward sums all critics in multi-critic mode
+                        actor_loss = -critic.Q1_forward(s, actor(s)).mean()
 
                         actor_optimizer.zero_grad()
                         actor_loss.backward()
@@ -391,17 +451,39 @@ def main() -> None:
                         # Critic update (twin Q, entropy-regularised target)
                         with torch.no_grad():
                             next_action, next_log_prob = actor.sample(ns)
-                            q1_next, q2_next = critic_target(ns, next_action)
-                            q_next = torch.min(q1_next, q2_next) - alpha * next_log_prob
-                            q_target = r + (1.0 - d) * GAMMA * q_next
+                            if USE_MULTI_CRITIC:
+                                target_qs = critic_target(ns, next_action)
+                                # Each critic gets its own per-critic soft Bellman target
+                                q_targets = [
+                                    r[:, i:i+1] + (1.0 - d) * GAMMA * (torch.min(q1_i, q2_i) - alpha * next_log_prob)
+                                    for i, (q1_i, q2_i) in enumerate(target_qs)
+                                ]
+                            else:
+                                q1_next, q2_next = critic_target(ns, next_action)
+                                q_next = torch.min(q1_next, q2_next) - alpha * next_log_prob
+                                q_target = r + (1.0 - d) * GAMMA * q_next
 
-                        q1, q2 = critic(s, a)
-                        td1 = loss_fn(q1, q_target)
-                        td2 = loss_fn(q2, q_target)
-                        if w is not None:
-                            critic_loss = (w * td1).mean() + (w * td2).mean()
+                        if USE_MULTI_CRITIC:
+                            critic_qs = critic(s, a)
+                            all_td1, all_td2 = [], []
+                            critic_loss = torch.tensor(0.0, device=device)
+                            for i, (q1_i, q2_i) in enumerate(critic_qs):
+                                td1_i = loss_fn(q1_i, q_targets[i])
+                                td2_i = loss_fn(q2_i, q_targets[i])
+                                all_td1.append(td1_i)
+                                all_td2.append(td2_i)
+                                if w is not None:
+                                    critic_loss = critic_loss + (w * td1_i).mean() + (w * td2_i).mean()
+                                else:
+                                    critic_loss = critic_loss + td1_i.mean() + td2_i.mean()
                         else:
-                            critic_loss = td1.mean() + td2.mean()
+                            q1, q2 = critic(s, a)
+                            td1 = loss_fn(q1, q_target)
+                            td2 = loss_fn(q2, q_target)
+                            if w is not None:
+                                critic_loss = (w * td1).mean() + (w * td2).mean()
+                            else:
+                                critic_loss = td1.mean() + td2.mean()
 
                         critic_optimizer.zero_grad()
                         critic_loss.backward()
@@ -410,13 +492,16 @@ def main() -> None:
                         critic_loss_val = critic_loss.item()
 
                         if P.USE_PER:
-                            td_errors = torch.max(td1, td2).detach().cpu().numpy().flatten()
+                            if USE_MULTI_CRITIC:
+                                per_td = torch.stack([torch.max(td1_i, td2_i) for td1_i, td2_i in zip(all_td1, all_td2)])
+                                td_errors = per_td.max(dim=0).values.detach().cpu().numpy().flatten()
+                            else:
+                                td_errors = torch.max(td1, td2).detach().cpu().numpy().flatten()
                             replay_buffer.update_priorities(per_indices, td_errors)
 
-                        # Actor update (entropy-regularised)
+                        # Actor update — entropy applied once; Q1_forward sums all critics
                         new_action, new_log_prob = actor.sample(s)
-                        q1_new, q2_new = critic(s, new_action)
-                        q_new = torch.min(q1_new, q2_new)
+                        q_new = critic.Q1_forward(s, new_action)
                         actor_loss = (alpha * new_log_prob - q_new).mean()
 
                         actor_optimizer.zero_grad()

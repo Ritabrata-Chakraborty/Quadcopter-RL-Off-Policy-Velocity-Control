@@ -6,7 +6,7 @@ import math
 # Experiment identity
 # ------------------------------------------------------------------
 
-EXPERIMENT_NAME = 'DDPG'
+EXPERIMENT_NAME = 'DDPG-MC'
 EXPERIMENT_TYPE = 'DDPG'
 
 # ------------------------------------------------------------------
@@ -44,6 +44,8 @@ NUM_SCAN_SAMPLES = 40
 STATE_SIZE = NUM_SCAN_SAMPLES + 5   # [40 lidar bins, goal_dist, goal_angle, prev_linear_x, prev_linear_y, prev_angular]
 ACTION_SIZE = 3                     # linear_x (forward), linear_y (lateral), angular velocity
 HIDDEN_SIZE = 512
+LOG_STD_MIN = -20                   # SAC log-std clamp bounds (unconditional so model.py can import)
+LOG_STD_MAX = 2 
 
 # ------------------------------------------------------------------
 # Training
@@ -81,8 +83,6 @@ if EXPERIMENT_TYPE == 'DDPG':
 
 if EXPERIMENT_TYPE == 'SAC':
     POLICY_UPDATE_FREQUENCY = 1
-    LOG_STD_MIN = -20
-    LOG_STD_MAX = 2
     SAC_ALPHA_INIT = 0.2
     SAC_ALPHA_LR = 0.004          # same as main LR
     SAC_TARGET_ENTROPY = -ACTION_SIZE  # = -3
@@ -118,6 +118,7 @@ MAP_PIXELS = 250
 MAP_SIDE_M = (MAP_PIXELS - 1) * MAP_CELL_SIZE           # metres
 MAX_GOAL_DISTANCE = math.hypot(MAP_SIDE_M, MAP_SIDE_M)  # metres
 COLLISION_RADIUS = 0.50                                 # metres; physical collision buffer around robot
+DRONE_VIZ_SPAN_CELLS = 10                               # visual drone marker size in cells
 FREE = 255
 OCCUPIED = 1
 UNKNOWN = 127
@@ -147,10 +148,17 @@ SPEED_LINEAR_Y_MAX = 1.5               # lateral velocity cap (m/s), lower than 
 SPEED_ANGULAR_MAX = math.radians(60)
 
 # ------------------------------------------------------------------
+# Multi-Critic
+# ------------------------------------------------------------------
+
+USE_MULTI_CRITIC = True    # True: 3 separate critics; False: single-critic baseline
+NUM_CRITICS = 3            # only used when USE_MULTI_CRITIC is True
+
+# ------------------------------------------------------------------
 # Prioritized Experience Replay
 # ------------------------------------------------------------------
 
-USE_PER = False                    # set True to enable PER, False keeps uniform sampling (old PER_ALPHA=0 was disabling it anyway)
+USE_PER = False                    # set True to enable PER, False keeps uniform sampling
 PER_ALPHA = 0.6                    # prioritization exponent (0=uniform, 1=full); only used if USE_PER=True
 PER_BETA_START = 0.4               # initial IS exponent, anneals to 1.0
 PER_BETA_FRAMES = 3_000 * 2        # 6K gradient steps; matches ~3000 policy episodes (post-fix convergence window)
@@ -160,9 +168,9 @@ PER_EPSILON = 1e-6                 # stability constant for priorities
 # GPU
 # ------------------------------------------------------------------
 
-USE_GPU = False
-USE_GPU_GLOBAL = True
-NUM_GPU = 0
+USE_GPU = False                    # per-worker GPU (Ray actors)
+USE_GPU_GLOBAL = True              # central training device (driver.py)
+NUM_GPU = 0                        # GPUs allocated per Ray worker
 
 
 # ------------------------------------------------------------------
@@ -171,5 +179,4 @@ NUM_GPU = 0
 
 def get_config_dict() -> dict:
     """Return all uppercase config values as a dict for wandb / yaml."""
-    import parameter as m
-    return {k: v for k, v in vars(m).items() if k.isupper() and not k.startswith('_')}
+    return {k: v for k, v in globals().items() if k.isupper() and not k.startswith('_')}

@@ -46,6 +46,7 @@ from parameter import (
     TRAIN_GOALS_DIR,
     TRAIN_MAPS_DIR,
     UNKNOWN,
+    USE_MULTI_CRITIC,
 )
 import utils as root_utils
 
@@ -78,13 +79,6 @@ def world_to_cell(world_x: float, world_y: float) -> tuple[int, int]:
     col = int(round(world_x / MAP_CELL_SIZE + (MAP_PIXELS - 1) / 2.0))
     row = int(round((MAP_PIXELS - 1) / 2.0 - world_y / MAP_CELL_SIZE))
     return col, row
-
-
-def cell_to_world(col: int, row: int) -> tuple[float, float]:
-    """Convert image pixel (col, row) to world coordinates (meters)."""
-    world_x = (col - (MAP_PIXELS - 1) / 2.0) * MAP_CELL_SIZE
-    world_y = ((MAP_PIXELS - 1) / 2.0 - row) * MAP_CELL_SIZE
-    return world_x, world_y
 
 
 # ------------------------------------------------------------------
@@ -191,9 +185,11 @@ class CmdVelTrajectory:
     def __init__(self, hover_altitude: float = HOVER_ALTITUDE):
         self.ctrlType = "xy_vel_z_pos"
         self.yawType = 1
+        self.xyzType = 0
         self.sDes = np.zeros(19)
         self.sDes[2] = hover_altitude
         self.des_yaw = 0.0
+        self.wps = np.array([[0.0, 0.0, hover_altitude]])
 
     def set_cmd_vel(self, linear_vel: float, lateral_vel: float, angular_vel: float, yaw: float, dt: float) -> None:
         """Set velocity command for one physics sub-step.
@@ -384,7 +380,10 @@ class QuadNavEnv:
 
         lidar_bins, min_obstacle_dist = self.get_scan()
         state, goal_dist = compute_state(lidar_bins, self.quad, self.goal_pos, action)
-        reward, done, info = self.compute_reward(goal_dist, action, collision, min_obstacle_dist)
+        if USE_MULTI_CRITIC:
+            reward, done, info = self.compute_reward_multi(goal_dist, action, collision, min_obstacle_dist)
+        else:
+            reward, done, info = self.compute_reward(goal_dist, action, collision, min_obstacle_dist)
 
         self.prev_action = action.copy()
         info['collision'] = collision
@@ -394,6 +393,45 @@ class QuadNavEnv:
     # Reward
     # ------------------------------------------------------------------
 
+    def compute_base_rewards(
+        self,
+        goal_dist: float,
+        action: np.ndarray,
+        min_obstacle_dist: float,
+    ) -> tuple[float, float, float, float, float, float]:
+        """Shared reward terms used by both single- and multi-critic modes.
+
+        Returns (r_distance, r_vangular, r_vlinear, r_vlateral, r_obstacle, r_yaw).
+        """
+        r_distance = (2.0 * self.initial_goal_dist) / (self.initial_goal_dist + goal_dist) - 1.0
+        r_vangular = -(action[2] ** 2)
+        linear_vel = (action[0] + 1.0) / 2.0 * SPEED_LINEAR_MAX
+        r_vlinear = -((SPEED_LINEAR_MAX - linear_vel) / SPEED_LINEAR_MAX) ** 2
+        r_vlateral = -(action[1] ** 2)
+        r_obstacle = OBSTACLE_PENALTY if min_obstacle_dist < OBSTACLE_PENALTY_THRESHOLD else 0.0
+        diff_xy = self.goal_pos - self.quad.pos[0:2]
+        goal_angle = normalize_angle(np.arctan2(diff_xy[1], diff_xy[0]) - self.quad.euler[2])
+        r_yaw = -abs(goal_angle)
+        return r_distance, r_vangular, r_vlinear, r_vlateral, r_obstacle, r_yaw
+
+    def check_terminal(
+        self,
+        collision: bool,
+        goal_dist: float,
+    ) -> tuple[float, bool, dict]:
+        """Evaluate terminal conditions. Returns (terminal_reward, done, info)."""
+        if collision:
+            return REWARD_CRASH, True, {'success': False, 'crash': True, 'timeout': False}
+        if goal_dist < GOAL_THRESHOLD:
+            return REWARD_SUCCESS, True, {'success': True, 'crash': False, 'timeout': False}
+        if self.is_extreme_tilt():
+            return REWARD_CRASH, True, {'success': False, 'crash': True, 'timeout': False}
+        if self.quad.pos[2] > 0.0:
+            return REWARD_CRASH, True, {'success': False, 'crash': True, 'timeout': False}
+        if self.total_time >= EPISODE_TIMEOUT:
+            return REWARD_TIMEOUT, True, {'success': False, 'crash': False, 'timeout': True}
+        return 0.0, False, {'success': False, 'crash': False, 'timeout': False}
+
     def compute_reward(
         self,
         goal_dist: float,
@@ -401,43 +439,38 @@ class QuadNavEnv:
         collision: bool,
         min_obstacle_dist: float,
     ) -> tuple[float, bool, dict]:
-        """Compute step reward with obstacle proximity and terminal bonuses."""
-        done = False
-        info = {'success': False, 'crash': False, 'timeout': False}
-
-        # diff_xy = self.goal_pos - self.quad.pos[0:2]
-        # goal_angle = normalize_angle(np.arctan2(diff_xy[1], diff_xy[0]) - self.quad.euler[2])
-        # r_yaw: penalizes angular deviation from goal direction (DISABLED)
-        # r_yaw = -abs(goal_angle)
-        
-        r_distance = (2.0 * self.initial_goal_dist) / (self.initial_goal_dist + goal_dist) - 1.0
-        r_vangular = -(action[2] ** 2)
-        linear_vel = (action[0] + 1.0) / 2.0 * SPEED_LINEAR_MAX
-        r_vlinear = -((SPEED_LINEAR_MAX - linear_vel) / SPEED_LINEAR_MAX) ** 2
-        r_vlateral = -(action[1] ** 2)
-        r_obstacle = OBSTACLE_PENALTY if min_obstacle_dist < OBSTACLE_PENALTY_THRESHOLD else 0.0
-
-        reward = r_distance + r_obstacle + r_vangular + r_vlinear + r_vlateral - 1.0
-
-        if collision:
-            reward += REWARD_CRASH
-            done = True
-            info['crash'] = True
-        elif goal_dist < GOAL_THRESHOLD:
-            reward += REWARD_SUCCESS
-            done = True
-            info['success'] = True
-        elif self.is_extreme_tilt():
-            reward += REWARD_CRASH
-            done = True
-            info['crash'] = True
-        elif self.quad.pos[2] > 0.0:
-            reward += REWARD_CRASH
-            done = True
-            info['crash'] = True
-        elif self.total_time >= EPISODE_TIMEOUT:
-            reward += REWARD_TIMEOUT
-            done = True
-            info['timeout'] = True
-
+        """Single-critic reward with obstacle proximity and terminal bonuses."""
+        r_distance, r_vangular, r_vlinear, r_vlateral, r_obstacle, r_yaw = \
+            self.compute_base_rewards(goal_dist, action, min_obstacle_dist)
+        terminal, done, info = self.check_terminal(collision, goal_dist)
+        reward = r_distance + r_obstacle + r_vangular + r_vlinear + r_vlateral + r_yaw - 1.0 + terminal
         return reward, done, info
+
+    def compute_reward_multi(
+        self,
+        goal_dist: float,
+        action: np.ndarray,
+        collision: bool,
+        min_obstacle_dist: float,
+    ) -> tuple[np.ndarray, bool, dict]:
+        """Multi-critic reward decomposition. Returns (reward_vec shape(3,), done, info).
+
+        Critic 1 (forward vel):  r_distance/2 + r_vlinear           - 1/3 living
+        Critic 2 (lateral vel):  r_obstacle   + r_vlateral          - 1/3 living
+        Critic 3 (angular vel):  r_distance/2 + r_vangular + r_yaw  - 1/3 living
+
+        Terminal rewards are split equally (1/3 each) to keep summed Q magnitude
+        comparable to the single-critic baseline.
+        """
+        r_distance, r_vangular, r_vlinear, r_vlateral, r_obstacle, r_yaw = \
+            self.compute_base_rewards(goal_dist, action, min_obstacle_dist)
+        terminal, done, info = self.check_terminal(collision, goal_dist)
+
+        living = -1.0 / 3.0
+        t = terminal / 3.0
+        r1 = r_distance / 2.0 + r_vlinear                   + living + t
+        r2 = r_obstacle       + r_vlateral                  + living + t
+        r3 = r_distance / 2.0 + r_vangular + r_yaw          + living + t
+
+        reward_vec = np.array([r1, r2, r3], dtype=np.float32)
+        return reward_vec, done, info

@@ -86,7 +86,9 @@ def run_eval_episode(agent: Agent, env: QuadNavEnv, record: bool = True) -> tupl
     for step in range(MAX_EPISODE_STEP):
         action = agent.get_action(state, is_training=False)
         state, reward, done, info_dict = env.step(action)
-        total_reward += reward
+        # Handle both single-critic (scalar) and multi-critic (array) rewards
+        reward_scalar = float(np.sum(reward)) if isinstance(reward, np.ndarray) else float(reward)
+        total_reward += reward_scalar
         if record:
             viz_data['trajectory'].append(
                 (env.quad.pos[0], env.quad.pos[1], env.quad.pos[2])
@@ -95,7 +97,7 @@ def run_eval_episode(agent: Agent, env: QuadNavEnv, record: bool = True) -> tupl
             viz_data['trajectory_roll'].append(float(env.quad.euler[0]))
             viz_data['trajectory_pitch'].append(float(env.quad.euler[1]))
             viz_data['cumulative_rewards'].append(
-                viz_data['cumulative_rewards'][-1] + float(reward)
+                viz_data['cumulative_rewards'][-1] + reward_scalar
             )
             viz_data['belief_snapshots'].append(env.robot_belief.copy())
             viz_data['lidar_snapshots'].append(env.get_lidar())
@@ -213,7 +215,6 @@ def save_training_plots(metrics: dict, eval_dir: str) -> None:
 
     # Create losses plot (2x2 grid, up to 4 subplots)
     if losses:
-        n_loss_metrics = min(len(losses), 4)
         fig, axes = plt.subplots(2, 2, figsize=(15, 10))
         fig.suptitle(f'{EXPERIMENT_NAME} - Training Losses', fontsize=14, fontweight='bold')
 
