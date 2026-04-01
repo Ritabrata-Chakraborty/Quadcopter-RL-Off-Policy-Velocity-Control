@@ -6,7 +6,7 @@ import math
 # Experiment identity
 # ------------------------------------------------------------------
 
-EXPERIMENT_NAME = 'DDPG-MC'
+EXPERIMENT_NAME = 'DDPG-MC-PER'
 EXPERIMENT_TYPE = 'DDPG'
 
 # ------------------------------------------------------------------
@@ -158,7 +158,7 @@ NUM_CRITICS = 3            # only used when USE_MULTI_CRITIC is True
 # Prioritized Experience Replay
 # ------------------------------------------------------------------
 
-USE_PER = False                    # set True to enable PER, False keeps uniform sampling
+USE_PER = True                     # set True to enable PER, False keeps uniform sampling
 PER_ALPHA = 0.6                    # prioritization exponent (0=uniform, 1=full); only used if USE_PER=True
 PER_BETA_START = 0.4               # initial IS exponent, anneals to 1.0
 PER_BETA_FRAMES = 3_000 * 2        # 6K gradient steps; matches ~3000 policy episodes (post-fix convergence window)
