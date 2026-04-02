@@ -10,7 +10,7 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DATASET="${REPO_ROOT}/dataset"
-WORLD_GEN="${DATASET}/map_gen"
+MAP_GEN="${DATASET}/map_gen"
 COLORS="${DATASET}/colors.json"
 MAPS_TRAIN="${DATASET}/maps_train"
 MAPS_EVAL="${DATASET}/maps_eval"
@@ -28,7 +28,7 @@ main() {
   [[ -f "${COLORS}" ]] || { echo "Missing ${COLORS}" >&2; exit 1; }
 
   log "1/3 simple.py → ${MAPS_TRAIN}/simple, ${MAPS_EVAL}/simple"
-  # python3 "${WORLD_GEN}/simple.py"
+  python3 "${MAP_GEN}/simple.py"
 
   log "2/3 goals for each map set under ${MAPS_TRAIN}/"
   shopt -s nullglob
@@ -43,7 +43,7 @@ main() {
     fi
     out="${MAPS_TRAIN}/${base}_goals"
     log "goals: ${base}/ → ${base}_goals/"
-    python3 "${WORLD_GEN}/goals.py" \
+    python3 "${MAP_GEN}/goals.py" \
       --input-dir "$d" \
       --output-dir "$out" \
       --colors "${COLORS}" \
@@ -66,7 +66,7 @@ main() {
     fi
     out="${MAPS_EVAL}/${base}_goals"
     log "goals: ${base}/ → ${base}_goals/"
-    python3 "${WORLD_GEN}/goals.py" \
+    python3 "${MAP_GEN}/goals.py" \
       --input-dir "$d" \
       --output-dir "$out" \
       --colors "${COLORS}" \
