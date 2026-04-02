@@ -101,6 +101,8 @@ class Worker:
             'travel_dist': self.env.travel_dist,
             'total_reward': total_reward,
             'success_rate': float(info.get('success', False)),
+            'crash_rate': float(info.get('crash', False)),
+            'timeout_rate': float(info.get('timeout', False)),
             'goal_distance': float(np.linalg.norm(self.env.goal_pos - self.env.quad.pos[0:2])),
             'goal_pos': self.env.goal_pos.copy(),
             'start_pos': self.env.start_pos.copy(),

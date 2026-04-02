@@ -110,29 +110,29 @@ def log_metrics(
     means = list(np.nanmean(td, axis=0))
 
     if USE_MULTI_CRITIC:
-        # Extract critic losses (total + individual)
         critic_loss = means[0]
         actor_loss = means[1]
         num_critics = P.NUM_CRITICS
         individual_losses = means[2:2+num_critics]
         perf_start_idx = 2 + num_critics
-        travel_dist, success_rate, total_reward, goal_distance = means[perf_start_idx:perf_start_idx+4]
+        travel_dist, success_rate, total_reward, goal_distance, crash_rate, timeout_rate = \
+            means[perf_start_idx:perf_start_idx+6]
     else:
-        critic_loss, actor_loss, travel_dist, success_rate, total_reward, goal_distance = means
+        critic_loss, actor_loss, travel_dist, success_rate, total_reward, goal_distance, \
+            crash_rate, timeout_rate = means
 
-    # Log total critic loss
     writer.add_scalar('Losses/Critic Loss', critic_loss, curr_episode)
     writer.add_scalar('Losses/Actor Loss', actor_loss, curr_episode)
 
-    # Log individual critic losses for multi-critic
     if USE_MULTI_CRITIC:
         for i, loss in enumerate(individual_losses):
             writer.add_scalar(f'Losses/Critic_{i}_Loss', loss, curr_episode)
 
-    # Log performance metrics
     writer.add_scalar('Perf/Reward', total_reward, curr_episode)
     writer.add_scalar('Perf/Travel Distance', travel_dist, curr_episode)
     writer.add_scalar('Perf/Success Rate', success_rate, curr_episode)
+    writer.add_scalar('Perf/Crash Rate', crash_rate, curr_episode)
+    writer.add_scalar('Perf/Timeout Rate', timeout_rate, curr_episode)
     writer.add_scalar('Perf/Goal Distance', goal_distance, curr_episode)
     writer.add_scalar('Perf/Buffer Size', buffer_size, curr_episode)
 
@@ -145,11 +145,12 @@ def log_metrics(
             'Actor Loss': actor_loss,
             'Reward': total_reward,
             'Success Rate': success_rate,
+            'Crash Rate': crash_rate,
+            'Timeout Rate': timeout_rate,
             'Travel Distance': travel_dist,
             'Goal Distance': goal_distance,
         }
 
-        # Log individual critic losses for multi-critic
         if USE_MULTI_CRITIC:
             for i, loss in enumerate(individual_losses):
                 wandb_dict[f'Critic_{i}_Loss'] = loss
@@ -288,7 +289,7 @@ def main() -> None:
         curr_episode += 1
         job_list.append(meta_agent.job.remote(weights_set, curr_episode, training_active, 0))
 
-    metric_names = ['travel_dist', 'success_rate', 'total_reward', 'goal_distance']
+    metric_names = ['travel_dist', 'success_rate', 'total_reward', 'goal_distance', 'crash_rate', 'timeout_rate']
     perf_metrics = {n: [] for n in metric_names}
     training_data = []
 

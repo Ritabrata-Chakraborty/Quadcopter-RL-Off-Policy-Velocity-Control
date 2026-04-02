@@ -34,8 +34,8 @@ from parameter import (
 from env import CmdVelTrajectory
 
 
-import utils  # Cache root utils before SimCon's 'utils' takes over.
-del sys.modules['utils']
+# Remove root utils from sys.modules so SimCon's 'utils' package takes precedence.
+sys.modules.pop('utils', None)
 
 # ------------------------------------------------------------------
 # SimCon on path (must follow root imports — SimCon also has a 'utils' package)

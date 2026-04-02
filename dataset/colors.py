@@ -14,7 +14,7 @@ except ImportError as exc:
     raise SystemExit("Install Pillow: pip install Pillow") from exc
 
 _DATASET = Path(__file__).resolve().parent
-sys.path.insert(0, str(_DATASET / "world_gen"))
+sys.path.insert(0, str(_DATASET / "map_gen"))
 from utils import IMAGE_EXTS
 
 CONFIG = _DATASET / "colors.json"

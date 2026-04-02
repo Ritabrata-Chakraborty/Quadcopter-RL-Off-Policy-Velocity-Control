@@ -105,7 +105,7 @@ bash dataset/download.sh
 Or generate custom environments:
 
 ```bash
-bash scripts/generate_worlds.sh
+bash scripts/generate_maps.sh
 ```
 
 ## Training
@@ -146,7 +146,7 @@ Quadrotor-RL-Off-Policy-Velocity-Control/
 │   ├── colors.json
 │   ├── colors.py
 │   ├── download.sh
-│   ├── world_gen/            # Generation Helpers
+│   ├── map_gen/              # Generation Helpers
 │   │   ├── goals.py
 │   │   ├── simple.py
 │   │   └── utils.py
@@ -162,7 +162,7 @@ Quadrotor-RL-Off-Policy-Velocity-Control/
 │               └── gifs/
 ├── Quadcopter_SimCon/        # Quadcopter Controller
 ├── scripts/                  # Utility Scripts
-│   └── generate_worlds.sh
+│   └── generate_maps.sh
 └── wandb/                    # Weights & Biases Logs
 ```
 

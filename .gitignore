@@ -24,10 +24,6 @@ env/
 .codex/
 .code/
 
-# Dataset
-dataset/maps_train/
-dataset/maps_eval/
-
 # Experiments
 experiments/
 

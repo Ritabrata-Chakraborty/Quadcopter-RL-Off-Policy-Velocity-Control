@@ -32,7 +32,7 @@ from parameter import (
     STATE_SIZE,
     TENSORBOARD_DIR,
 )
-from utils import save_navigation_episode_outputs
+from utils import compute_lowess, extract_tensorboard_metrics, save_navigation_episode_outputs
 
 # ------------------------------------------------------------------
 # Global configuration
@@ -157,41 +157,6 @@ class EvalRunner:
 # Training metrics extraction from tensorboard
 # ------------------------------------------------------------------
 
-def compute_ema(values: np.ndarray, alpha: float = 0.1) -> np.ndarray:
-    """Compute exponential moving average. alpha=0.1 -> beta=0.9 smoothing."""
-    ema = np.zeros_like(values)
-    ema[0] = values[0]
-    for i in range(1, len(values)):
-        ema[i] = alpha * values[i] + (1 - alpha) * ema[i - 1]
-    return ema
-
-
-def extract_tensorboard_metrics(tensorboard_dir: str) -> dict:
-    """Extract training metrics from tensorboard event files.
-
-    Returns dict with keys like 'Losses/Critic Loss', 'Perf/Reward', etc.
-    Each value is a list of (step, value) tuples.
-    """
-    try:
-        from tensorboard.backend.event_processing import event_accumulator
-    except ImportError:
-        print("Warning: tensorboard not available, skipping training plots")
-        return {}
-
-    metrics = {}
-    try:
-        ea = event_accumulator.EventAccumulator(tensorboard_dir)
-        ea.Reload()
-
-        for scalar_name in ea.Tags()['scalars']:
-            events = ea.Scalars(scalar_name)
-            metrics[scalar_name] = [(e.step, e.value) for e in events]
-    except Exception as e:
-        print(f"Warning: Could not read tensorboard events: {e}")
-
-    return metrics
-
-
 def save_training_plots(metrics: dict, eval_dir: str) -> None:
     """Create and save training plots from tensorboard metrics."""
     if not metrics:
@@ -237,9 +202,9 @@ def save_training_plots(metrics: dict, eval_dir: str) -> None:
         for metric_name, (steps, vals) in losses.items():
             row, col = ax_idx // cols, ax_idx % cols
             ax = axes[row, col] if axes.ndim > 1 else axes[ax_idx]
-            ema_vals = compute_ema(vals, alpha=0.1)  # beta=0.9 smoothing
+            lowess_vals = compute_lowess(steps, vals, frac=0.05)
             ax.plot(steps, vals, linewidth=0.8, color='#CCCCCC', alpha=0.6, label='Raw')
-            ax.plot(steps, ema_vals, linewidth=2.0, color='#1565C0', label='EMA (β=0.9)')
+            ax.plot(steps, lowess_vals, linewidth=2.5, color='#1565C0', label='LOWESS')
             ax.set_xlabel('Episode')
             ax.set_ylabel('Loss')
             ax.set_title(metric_name, fontweight='bold')
@@ -279,10 +244,10 @@ def save_training_plots(metrics: dict, eval_dir: str) -> None:
         for metric_name, (steps, vals) in perf_metrics.items():
             row, col = ax_idx // cols, ax_idx % cols
             ax = axes[row, col] if axes.ndim > 1 else axes[ax_idx]
-            ema_vals = compute_ema(vals, alpha=0.1)  # beta=0.9 smoothing
+            lowess_vals = compute_lowess(steps, vals, frac=0.1)
             color = colors[ax_idx % len(colors)]
             ax.plot(steps, vals, linewidth=0.8, color='#CCCCCC', alpha=0.6, label='Raw')
-            ax.plot(steps, ema_vals, linewidth=2.0, color=color, label='EMA (β=0.9)')
+            ax.plot(steps, lowess_vals, linewidth=2.5, color=color, label='LOWESS')
             ax.set_xlabel('Episode')
             ax.set_ylabel('Value')
             ax.set_title(metric_name, fontweight='bold')

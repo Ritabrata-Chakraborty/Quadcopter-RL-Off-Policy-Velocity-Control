@@ -1,0 +1,30 @@
+{
+  "start_pose": [
+    16.0,
+    -6.0
+  ],
+  "goal_pose_list": [
+    [
+      -15.8,
+      13.2
+    ]
+  ],
+  "start_corner_pixels": {
+    "top_left": [
+      150,
+      200
+    ],
+    "height": 10,
+    "width": 10
+  },
+  "goal_corner_pixels": [
+    {
+      "top_left": [
+        57,
+        44
+      ],
+      "height": 4,
+      "width": 4
+    }
+  ]
+}

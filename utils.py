@@ -332,6 +332,41 @@ class PrioritizedReplayBuffer:
 
 
 # ------------------------------------------------------------------
+# Training metrics helpers (TensorBoard + LOWESS)
+# ------------------------------------------------------------------
+
+def compute_lowess(x: np.ndarray, y: np.ndarray, frac: float = 0.1) -> np.ndarray:
+    """LOWESS smoothing over (x, y); returns smoothed y values."""
+    from statsmodels.nonparametric.smoothers_lowess import lowess
+    if len(y) < 3:
+        return y
+    return lowess(y, x, frac=frac, it=3, delta=0.0)[:, 1]
+
+
+def extract_tensorboard_metrics(tensorboard_dir: str) -> dict[str, list[tuple]]:
+    """Extract all scalar series from a TensorBoard event directory.
+
+    Returns a dict mapping tag name to a list of ``(step, value)`` tuples.
+    Returns an empty dict if TensorBoard is unavailable or the directory is unreadable.
+    """
+    try:
+        from tensorboard.backend.event_processing import event_accumulator
+    except ImportError:
+        print("Warning: tensorboard not available, skipping training plots")
+        return {}
+
+    metrics: dict[str, list[tuple]] = {}
+    try:
+        ea = event_accumulator.EventAccumulator(tensorboard_dir)
+        ea.Reload()
+        for tag in ea.Tags()['scalars']:
+            metrics[tag] = [(e.step, e.value) for e in ea.Scalars(tag)]
+    except Exception as exc:
+        print(f"Warning: could not read tensorboard events: {exc}")
+    return metrics
+
+
+# ------------------------------------------------------------------
 # Network helpers
 # ------------------------------------------------------------------
 

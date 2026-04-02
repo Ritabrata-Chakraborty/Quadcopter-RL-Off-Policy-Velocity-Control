@@ -25,8 +25,8 @@ EVAL_DIR = f'{EXPERIMENT_DIR}/eval'
 
 SUMMARY_WINDOW = 10
 LOAD_MODEL = False
-SAVE_IMG_GAP = 500
-CHECKPOINT_EVERY = 500
+SAVE_IMG_GAP = 5000
+CHECKPOINT_EVERY = 25000
 
 # ------------------------------------------------------------------
 # Wandb
@@ -51,11 +51,11 @@ LOG_STD_MAX = 2
 # Training
 # ------------------------------------------------------------------
 
-MAX_EPISODE_STEP = 900
-REPLAY_SIZE = 500_000
+MAX_EPISODE_STEP = 300              # 30 s at 0.1 s/step
+REPLAY_SIZE = 200_000               # ~667 episodes of buffer at ~300 steps/ep
 MINIMUM_BUFFER_SIZE = 25_000
-BATCH_SIZE = 256                    # reduced for faster iterations (45-dim state doesn't need 512)
-GRADIENT_STEPS_PER_EPISODE = 2      # reduced from 8; UTD ratio = (2*256)/(~100 trans/ep) = 5x (was 41x)
+BATCH_SIZE = 256                    # 45-dim state; larger batch not needed
+GRADIENT_STEPS_PER_EPISODE = 2      # UTD ratio ≈ (2×256)/~150 trans/ep ≈ 3×
 LR = 0.001                          # standard DDPG; avoids grad clipping every update
 GAMMA = 0.99
 TAU = 0.001                         # slower target tracking; more stable with lower LR
@@ -102,7 +102,7 @@ OU_NOISE_DECAY_EPISODES = 3_000     # reduced from 15_000; old DDPG converged at
 PHYSICS_TS = 0.005
 DRL_STEP_DURATION = 0.1
 EPISODE_TIMEOUT = MAX_EPISODE_STEP * DRL_STEP_DURATION
-GOAL_THRESHOLD = 1.0
+GOAL_THRESHOLD = 0.8
 HOVER_ALTITUDE = -1.0
 
 # ------------------------------------------------------------------
@@ -113,12 +113,12 @@ TRAIN_MAPS_DIR = 'dataset/maps_train/simple'
 TRAIN_GOALS_DIR = 'dataset/maps_train/simple_goals'
 EVAL_MAPS_DIR = 'dataset/maps_eval/simple'
 EVAL_GOALS_DIR = 'dataset/maps_eval/simple_goals'
-MAP_CELL_SIZE = 0.25                                    # metres per cell
+MAP_CELL_SIZE = 0.2                                     # metres per cell
 MAP_PIXELS = 250
 MAP_SIDE_M = (MAP_PIXELS - 1) * MAP_CELL_SIZE           # metres
 MAX_GOAL_DISTANCE = math.hypot(MAP_SIDE_M, MAP_SIDE_M)  # metres
-COLLISION_RADIUS = 0.50                                 # metres; physical collision buffer around robot
-DRONE_VIZ_SPAN_CELLS = 10                               # visual drone marker size in cells
+COLLISION_RADIUS = 0.40                                 # metres; physical collision buffer around robot
+DRONE_VIZ_SPAN_CELLS = 6                                # visual drone marker size in cells (~2.4 m at 0.2 m/cell)
 FREE = 255
 OCCUPIED = 1
 UNKNOWN = 127
@@ -127,7 +127,7 @@ UNKNOWN = 127
 # Sensing
 # ------------------------------------------------------------------
 
-SENSOR_RANGE = 12.0
+SENSOR_RANGE = 16.0
 
 # ------------------------------------------------------------------
 # Reward
@@ -137,14 +137,14 @@ REWARD_SUCCESS = 2500.0
 REWARD_CRASH = -2000.0
 REWARD_TIMEOUT = -100.0
 OBSTACLE_PENALTY = -20.0
-OBSTACLE_PENALTY_THRESHOLD = 1.0
+OBSTACLE_PENALTY_THRESHOLD = 0.8
 
 # ------------------------------------------------------------------
 # Velocity limits
 # ------------------------------------------------------------------
 
 SPEED_LINEAR_MAX = 3.0
-SPEED_LINEAR_Y_MAX = 1.5               # lateral velocity cap (m/s), lower than forward
+SPEED_LINEAR_Y_MAX = 1.0   
 SPEED_ANGULAR_MAX = math.radians(60)
 
 # ------------------------------------------------------------------
