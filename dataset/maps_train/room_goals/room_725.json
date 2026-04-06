@@ -5,8 +5,24 @@
   ],
   "goal_pose_list": [
     [
-      -15.8,
-      13.0
+      12.6,
+      -13.8
+    ],
+    [
+      10.0,
+      -14.8
+    ],
+    [
+      -4.6,
+      -7.4
+    ],
+    [
+      -4.2,
+      -2.6
+    ],
+    [
+      -8.6,
+      13.6
     ]
   ],
   "start_corner_pixels": {
@@ -20,8 +36,40 @@
   "goal_corner_pixels": [
     {
       "top_left": [
-        58,
-        44
+        192,
+        186
+      ],
+      "height": 4,
+      "width": 4
+    },
+    {
+      "top_left": [
+        197,
+        173
+      ],
+      "height": 4,
+      "width": 4
+    },
+    {
+      "top_left": [
+        160,
+        100
+      ],
+      "height": 4,
+      "width": 4
+    },
+    {
+      "top_left": [
+        136,
+        102
+      ],
+      "height": 4,
+      "width": 4
+    },
+    {
+      "top_left": [
+        55,
+        80
       ],
       "height": 4,
       "width": 4

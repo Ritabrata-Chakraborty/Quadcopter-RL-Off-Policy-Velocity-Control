@@ -1,0 +1,1771 @@
+{
+  "experiment": "DDPG-MC",
+  "eval_name": "eval_20260401_002057",
+  "checkpoint": "experiments/DDPG-MC/train/checkpoints/latest.pth",
+  "train_episode": 17500,
+  "seed": 42,
+  "eval_maps_dir": "dataset/maps_eval/simple",
+  "eval_goals_dir": "dataset/maps_eval/simple_goals",
+  "num_episodes": 50,
+  "num_workers": 8,
+  "successes": 49,
+  "crashes": 1,
+  "timeouts": 0,
+  "success_rate": 0.98,
+  "avg_reward": 2299.630870985836,
+  "avg_steps": 92.14,
+  "avg_goal_distance": 1.25227768292638,
+  "avg_travel_dist": 24.904857920549013,
+  "episodes": [
+    {
+      "reward": 2324.817497842014,
+      "steps": 146,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 40.509778362880574,
+      "goal_distance": 0.9669625711509898,
+      "goal_pos": [
+        -8.75,
+        -22.25
+      ],
+      "start_pos": [
+        -0.75,
+        16.0
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          56,
+          117
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          212,
+          88
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 39.07764706325088,
+      "map_name": "simple_1"
+    },
+    {
+      "reward": 2395.8735757172108,
+      "steps": 134,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 37.45473507207925,
+      "goal_distance": 0.8395617615504386,
+      "goal_pos": [
+        18.0,
+        17.75
+      ],
+      "start_pos": [
+        -9.25,
+        -8.25
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          153,
+          83
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          52,
+          195
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 37.663808888640034,
+      "map_name": "simple_10"
+    },
+    {
+      "reward": 2429.857660189271,
+      "steps": 52,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 12.913492137471778,
+      "goal_distance": 0.8239671282221109,
+      "goal_pos": [
+        20.75,
+        2.25
+      ],
+      "start_pos": [
+        20.75,
+        -10.25
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          161,
+          203
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          114,
+          206
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 12.5,
+      "map_name": "simple_11"
+    },
+    {
+      "reward": 2473.490610435605,
+      "steps": 36,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 9.149531280046885,
+      "goal_distance": 0.7428846774126049,
+      "goal_pos": [
+        23.5,
+        15.5
+      ],
+      "start_pos": [
+        13.75,
+        14.0
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          64,
+          175
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          61,
+          217
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 9.86470982847443,
+      "map_name": "simple_12"
+    },
+    {
+      "reward": 2332.195943079889,
+      "steps": 144,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 39.80354721371143,
+      "goal_distance": 0.8584532282149888,
+      "goal_pos": [
+        -10.25,
+        4.75
+      ],
+      "start_pos": [
+        16.5,
+        -17.25
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          189,
+          186
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          104,
+          82
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 34.63470080713849,
+      "map_name": "simple_13"
+    },
+    {
+      "reward": 2362.260239481926,
+      "steps": 104,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 28.42280885605132,
+      "goal_distance": 0.7585584177320356,
+      "goal_pos": [
+        -5.25,
+        6.25
+      ],
+      "start_pos": [
+        14.0,
+        19.25
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          43,
+          176
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          98,
+          102
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 23.228484668613234,
+      "map_name": "simple_14"
+    },
+    {
+      "reward": -2181.4191865324974,
+      "steps": 60,
+      "success": false,
+      "crash": true,
+      "timeout": false,
+      "travel_dist": 15.102895645809442,
+      "goal_distance": 19.430248465246542,
+      "goal_pos": [
+        -7.5,
+        21.5
+      ],
+      "start_pos": [
+        19.25,
+        17.25
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          51,
+          197
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          37,
+          93
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 27.085512732824533,
+      "map_name": "simple_15"
+    },
+    {
+      "reward": 2431.937262892723,
+      "steps": 33,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 6.956618410963951,
+      "goal_distance": 0.7497749709703307,
+      "goal_pos": [
+        -3.0,
+        0.5
+      ],
+      "start_pos": [
+        -2.5,
+        6.75
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          93,
+          110
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          121,
+          111
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 6.269968101992227,
+      "map_name": "simple_16"
+    },
+    {
+      "reward": 2426.5658684521914,
+      "steps": 71,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 18.88001520362353,
+      "goal_distance": 0.9296254343282863,
+      "goal_pos": [
+        6.75,
+        20.25
+      ],
+      "start_pos": [
+        2.75,
+        2.0
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          112,
+          131
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          42,
+          150
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 18.68321439153338,
+      "map_name": "simple_17"
+    },
+    {
+      "reward": 2437.2846258580685,
+      "steps": 88,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 23.919831506185403,
+      "goal_distance": 0.9316859431862056,
+      "goal_pos": [
+        3.5,
+        -9.75
+      ],
+      "start_pos": [
+        -21.25,
+        -8.75
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          155,
+          35
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          162,
+          137
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 24.770193782043773,
+      "map_name": "simple_18"
+    },
+    {
+      "reward": 2318.777518391609,
+      "steps": 174,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 48.84472010304644,
+      "goal_distance": 0.9683338131328316,
+      "goal_pos": [
+        -13.75,
+        21.0
+      ],
+      "start_pos": [
+        6.25,
+        -18.75
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          195,
+          145
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          39,
+          68
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 44.49789320855539,
+      "map_name": "simple_19"
+    },
+    {
+      "reward": 2421.6150738969445,
+      "steps": 102,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 28.25040946459449,
+      "goal_distance": 0.8837437328218755,
+      "goal_pos": [
+        22.0,
+        -11.0
+      ],
+      "start_pos": [
+        0.75,
+        8.5
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          86,
+          123
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          167,
+          211
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 28.841159824112484,
+      "map_name": "simple_2"
+    },
+    {
+      "reward": 2472.477531194687,
+      "steps": 29,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 7.1768709499115655,
+      "goal_distance": 0.9240671510311046,
+      "goal_pos": [
+        1.25,
+        -3.0
+      ],
+      "start_pos": [
+        -6.0,
+        -6.5
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          146,
+          96
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          135,
+          128
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 8.050621094052309,
+      "map_name": "simple_20"
+    },
+    {
+      "reward": 2434.142373934388,
+      "steps": 48,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 12.052649697879577,
+      "goal_distance": 0.8496443755042575,
+      "goal_pos": [
+        8.25,
+        20.25
+      ],
+      "start_pos": [
+        7.75,
+        8.75
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          85,
+          151
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          42,
+          156
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 11.510864433221338,
+      "map_name": "simple_21"
+    },
+    {
+      "reward": 2463.7986194491386,
+      "steps": 51,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 13.404322472334105,
+      "goal_distance": 0.980051391274718,
+      "goal_pos": [
+        12.25,
+        -14.0
+      ],
+      "start_pos": [
+        -2.0,
+        -15.75
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          183,
+          112
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          179,
+          172
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 14.35705401536123,
+      "map_name": "simple_22"
+    },
+    {
+      "reward": 2361.078084766865,
+      "steps": 149,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 41.44132602191533,
+      "goal_distance": 0.9668702939153835,
+      "goal_pos": [
+        -17.0,
+        20.25
+      ],
+      "start_pos": [
+        -6.75,
+        -17.5
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          190,
+          93
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          42,
+          55
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 39.11681224230829,
+      "map_name": "simple_23"
+    },
+    {
+      "reward": 2357.4192921966314,
+      "steps": 101,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 26.918912304099095,
+      "goal_distance": 0.8361441718789719,
+      "goal_pos": [
+        -18.5,
+        7.5
+      ],
+      "start_pos": [
+        1.0,
+        -1.5
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          126,
+          124
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          93,
+          49
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 21.47673159491453,
+      "map_name": "simple_24"
+    },
+    {
+      "reward": 2332.521129757166,
+      "steps": 77,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 20.538351758986877,
+      "goal_distance": 0.9093247627423723,
+      "goal_pos": [
+        17.5,
+        -19.25
+      ],
+      "start_pos": [
+        21.0,
+        -1.0
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          124,
+          204
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          200,
+          193
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 18.58258593414813,
+      "map_name": "simple_25"
+    },
+    {
+      "reward": 2408.0801424086094,
+      "steps": 120,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 33.42365687693098,
+      "goal_distance": 0.9847572966412756,
+      "goal_pos": [
+        4.5,
+        -3.75
+      ],
+      "start_pos": [
+        -18.75,
+        21.0
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          36,
+          45
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          138,
+          141
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 33.95769426801531,
+      "map_name": "simple_26"
+    },
+    {
+      "reward": 2342.370140478015,
+      "steps": 109,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 28.590143576687932,
+      "goal_distance": 0.9118038841459846,
+      "goal_pos": [
+        10.75,
+        22.5
+      ],
+      "start_pos": [
+        -6.5,
+        1.25
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          115,
+          94
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          33,
+          166
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 27.370147971832377,
+      "map_name": "simple_27"
+    },
+    {
+      "reward": 2439.6810635626316,
+      "steps": 42,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 10.415193809260899,
+      "goal_distance": 0.8737693904945669,
+      "goal_pos": [
+        -4.25,
+        14.75
+      ],
+      "start_pos": [
+        -5.5,
+        4.75
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          101,
+          98
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          64,
+          106
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 10.077822185373186,
+      "map_name": "simple_28"
+    },
+    {
+      "reward": 2328.5873294621706,
+      "steps": 147,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 40.42195567475193,
+      "goal_distance": 0.8490540950711497,
+      "goal_pos": [
+        -14.5,
+        21.75
+      ],
+      "start_pos": [
+        17.25,
+        8.25
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          87,
+          189
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          36,
+          65
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 34.50090578521092,
+      "map_name": "simple_29"
+    },
+    {
+      "reward": 2363.7619415298104,
+      "steps": 92,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 24.527282886265954,
+      "goal_distance": 0.8982789572349829,
+      "goal_pos": [
+        4.75,
+        21.5
+      ],
+      "start_pos": [
+        17.5,
+        3.75
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          105,
+          190
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          37,
+          142
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 21.85463337601434,
+      "map_name": "simple_3"
+    },
+    {
+      "reward": 2342.2337711155415,
+      "steps": 126,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 34.76152852005488,
+      "goal_distance": 0.7586550980669253,
+      "goal_pos": [
+        8.5,
+        -13.75
+      ],
+      "start_pos": [
+        6.25,
+        19.75
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          41,
+          145
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          178,
+          157
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 33.57547468018881,
+      "map_name": "simple_30"
+    },
+    {
+      "reward": 2357.5889619141817,
+      "steps": 111,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 30.430559909511395,
+      "goal_distance": 0.9521917395306315,
+      "goal_pos": [
+        20.0,
+        -4.0
+      ],
+      "start_pos": [
+        -1.75,
+        17.25
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          51,
+          113
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          139,
+          203
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 30.407647064513228,
+      "map_name": "simple_31"
+    },
+    {
+      "reward": 2361.034937977791,
+      "steps": 43,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 10.031315063860406,
+      "goal_distance": 0.9541585057667415,
+      "goal_pos": [
+        -16.75,
+        21.0
+      ],
+      "start_pos": [
+        -13.75,
+        19.5
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          42,
+          65
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          39,
+          56
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 3.3541019662496847,
+      "map_name": "simple_32"
+    },
+    {
+      "reward": 2335.6300703808665,
+      "steps": 106,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 29.05890158280251,
+      "goal_distance": 0.8658660389869014,
+      "goal_pos": [
+        -4.0,
+        3.5
+      ],
+      "start_pos": [
+        10.5,
+        -17.75
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          191,
+          162
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          109,
+          107
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 25.725716705273733,
+      "map_name": "simple_33"
+    },
+    {
+      "reward": 2469.5305842757225,
+      "steps": 29,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 7.22987421772843,
+      "goal_distance": 0.8781063376631199,
+      "goal_pos": [
+        -7.5,
+        -20.75
+      ],
+      "start_pos": [
+        -14.0,
+        -16.0
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          184,
+          64
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          206,
+          93
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 8.050621094052309,
+      "map_name": "simple_34"
+    },
+    {
+      "reward": 2444.650843679905,
+      "steps": 36,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 8.484443190154472,
+      "goal_distance": 0.8302166555041294,
+      "goal_pos": [
+        2.75,
+        6.5
+      ],
+      "start_pos": [
+        0.75,
+        14.75
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          61,
+          123
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          97,
+          134
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 8.488963423174823,
+      "map_name": "simple_35"
+    },
+    {
+      "reward": 2430.304016686976,
+      "steps": 92,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 25.364151848530938,
+      "goal_distance": 0.8284473745839815,
+      "goal_pos": [
+        11.5,
+        -19.0
+      ],
+      "start_pos": [
+        -8.75,
+        -2.75
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          131,
+          85
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          199,
+          169
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 25.96391726993444,
+      "map_name": "simple_36"
+    },
+    {
+      "reward": 2371.3427906036377,
+      "steps": 115,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 31.851569394541503,
+      "goal_distance": 0.8918461179218062,
+      "goal_pos": [
+        0.75,
+        -23.25
+      ],
+      "start_pos": [
+        17.0,
+        0.5
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          118,
+          188
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          216,
+          126
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 28.777161083053347,
+      "map_name": "simple_37"
+    },
+    {
+      "reward": 2294.4924590289593,
+      "steps": 165,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 44.73562517189978,
+      "goal_distance": 0.9172459399894801,
+      "goal_pos": [
+        1.75,
+        -21.25
+      ],
+      "start_pos": [
+        8.25,
+        20.5
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          38,
+          153
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          208,
+          130
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 42.252958476300805,
+      "map_name": "simple_38"
+    },
+    {
+      "reward": 2440.3820197433233,
+      "steps": 73,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 19.886275134373555,
+      "goal_distance": 0.9152132966556865,
+      "goal_pos": [
+        8.25,
+        22.5
+      ],
+      "start_pos": [
+        -6.5,
+        8.25
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          87,
+          94
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          33,
+          156
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 20.509144301993683,
+      "map_name": "simple_39"
+    },
+    {
+      "reward": 2324.475632570684,
+      "steps": 145,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 40.012089319630135,
+      "goal_distance": 0.9810468263474715,
+      "goal_pos": [
+        -23.5,
+        -8.75
+      ],
+      "start_pos": [
+        8.5,
+        1.25
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          115,
+          154
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          158,
+          29
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 33.52610922848042,
+      "map_name": "simple_4"
+    },
+    {
+      "reward": 2417.814881056547,
+      "steps": 107,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 29.435296973733767,
+      "goal_distance": 0.7350371795539458,
+      "goal_pos": [
+        23.0,
+        21.0
+      ],
+      "start_pos": [
+        -6.0,
+        15.5
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          58,
+          96
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          39,
+          215
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 29.516944286290883,
+      "map_name": "simple_40"
+    },
+    {
+      "reward": 2390.4624876379967,
+      "steps": 80,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 20.84532435163409,
+      "goal_distance": 0.9394180800345909,
+      "goal_pos": [
+        -18.75,
+        10.75
+      ],
+      "start_pos": [
+        -12.0,
+        -6.5
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          146,
+          72
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          80,
+          48
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 18.523633552842703,
+      "map_name": "simple_41"
+    },
+    {
+      "reward": 2396.490848571062,
+      "steps": 132,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 36.67023906493715,
+      "goal_distance": 0.7941812109071987,
+      "goal_pos": [
+        2.5,
+        15.0
+      ],
+      "start_pos": [
+        -14.5,
+        -17.25
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          189,
+          62
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          63,
+          133
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 36.456309467635364,
+      "map_name": "simple_42"
+    },
+    {
+      "reward": 2362.728097833693,
+      "steps": 132,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 36.532980358184794,
+      "goal_distance": 0.9927361681917376,
+      "goal_pos": [
+        3.0,
+        16.25
+      ],
+      "start_pos": [
+        19.25,
+        -13.5
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          174,
+          197
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          58,
+          135
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 33.898746289501624,
+      "map_name": "simple_43"
+    },
+    {
+      "reward": 2475.3195332586765,
+      "steps": 29,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 7.155736420349745,
+      "goal_distance": 0.879717350491106,
+      "goal_pos": [
+        9.75,
+        16.5
+      ],
+      "start_pos": [
+        2.0,
+        18.5
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          46,
+          128
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          57,
+          162
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 8.00390529679106,
+      "map_name": "simple_44"
+    },
+    {
+      "reward": 2415.0123689472675,
+      "steps": 119,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 32.97674536976306,
+      "goal_distance": 0.861890199105007,
+      "goal_pos": [
+        17.75,
+        -3.25
+      ],
+      "start_pos": [
+        -13.0,
+        -17.0
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          188,
+          68
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          136,
+          194
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 33.68419510690437,
+      "map_name": "simple_45"
+    },
+    {
+      "reward": 2425.840985864401,
+      "steps": 108,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 29.63792847371909,
+      "goal_distance": 0.9101817054521318,
+      "goal_pos": [
+        19.25,
+        11.25
+      ],
+      "start_pos": [
+        -10.75,
+        16.75
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          53,
+          77
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          78,
+          200
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 30.5,
+      "map_name": "simple_46"
+    },
+    {
+      "reward": 2453.7290957421064,
+      "steps": 44,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 11.51248216654617,
+      "goal_distance": 0.9127620593480271,
+      "goal_pos": [
+        22.25,
+        6.0
+      ],
+      "start_pos": [
+        14.75,
+        15.5
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          58,
+          179
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          99,
+          212
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 12.103718436910205,
+      "map_name": "simple_47"
+    },
+    {
+      "reward": 2415.9188561439514,
+      "steps": 55,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 13.954853174099112,
+      "goal_distance": 0.7643658707915437,
+      "goal_pos": [
+        -21.0,
+        -8.5
+      ],
+      "start_pos": [
+        -17.25,
+        -19.75
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          199,
+          51
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          157,
+          39
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 11.858541225631422,
+      "map_name": "simple_48"
+    },
+    {
+      "reward": 2321.494537420571,
+      "steps": 142,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 39.446635471823235,
+      "goal_distance": 0.8429550906763502,
+      "goal_pos": [
+        -21.75,
+        -11.0
+      ],
+      "start_pos": [
+        7.5,
+        4.5
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          102,
+          150
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          167,
+          36
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 33.10305877105619,
+      "map_name": "simple_49"
+    },
+    {
+      "reward": 2421.4271920621395,
+      "steps": 60,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 15.367001112057492,
+      "goal_distance": 0.9289182476519359,
+      "goal_pos": [
+        5.0,
+        5.0
+      ],
+      "start_pos": [
+        7.0,
+        -9.25
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          157,
+          148
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          103,
+          143
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 14.38966643115816,
+      "map_name": "simple_5"
+    },
+    {
+      "reward": 2360.797819197178,
+      "steps": 54,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 13.999774978663837,
+      "goal_distance": 0.9751644843671532,
+      "goal_pos": [
+        17.5,
+        -17.0
+      ],
+      "start_pos": [
+        16.5,
+        -3.75
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          135,
+          186
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          191,
+          193
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 13.287682265918312,
+      "map_name": "simple_50"
+    },
+    {
+      "reward": 2433.7789617925882,
+      "steps": 57,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 14.757114694303432,
+      "goal_distance": 0.747086201803247,
+      "goal_pos": [
+        -18.0,
+        -5.25
+      ],
+      "start_pos": [
+        -20.5,
+        -19.25
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          197,
+          38
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          144,
+          51
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 14.221462653327892,
+      "map_name": "simple_6"
+    },
+    {
+      "reward": 2263.637097284198,
+      "steps": 165,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 46.114660395476896,
+      "goal_distance": 0.9558672044714909,
+      "goal_pos": [
+        -21.0,
+        -9.75
+      ],
+      "start_pos": [
+        7.25,
+        21.0
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          36,
+          149
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          162,
+          39
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 41.7567359835512,
+      "map_name": "simple_7"
+    },
+    {
+      "reward": 2437.1645154058933,
+      "steps": 90,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 24.54818280911949,
+      "goal_distance": 0.9038160957509903,
+      "goal_pos": [
+        23.5,
+        3.75
+      ],
+      "start_pos": [
+        -1.25,
+        9.5
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          82,
+          115
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          108,
+          217
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 25.409151894543825,
+      "map_name": "simple_8"
+    },
+    {
+      "reward": 2341.0858446508646,
+      "steps": 83,
+      "success": true,
+      "crash": false,
+      "timeout": false,
+      "travel_dist": 21.32255757446254,
+      "goal_distance": 0.8292271528016786,
+      "goal_pos": [
+        4.75,
+        2.0
+      ],
+      "start_pos": [
+        18.75,
+        -1.75
+      ],
+      "start_corner_pixels": {
+        "top_left": [
+          127,
+          195
+        ],
+        "height": 10,
+        "width": 10
+      },
+      "goal_corner_pixels": {
+        "top_left": [
+          115,
+          142
+        ],
+        "height": 4,
+        "width": 4
+      },
+      "initial_goal_dist": 14.493533040635745,
+      "map_name": "simple_9"
+    }
+  ]
+}
