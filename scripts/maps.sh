@@ -15,8 +15,8 @@ COLORS="${DATASET}/colors.json"
 MAPS_TRAIN="${DATASET}/maps_train"
 MAPS_EVAL="${DATASET}/maps_eval"
 
-MIN_GOALS="${MIN_GOALS:-5}"
-MAX_GOALS="${MAX_GOALS:-5}"
+MIN_GOALS="${MIN_GOALS:-25}"
+MAX_GOALS="${MAX_GOALS:-30}"
 GOAL_SEED="${GOAL_SEED:-42}"
 
 log() { echo "[maps] $*"; }
