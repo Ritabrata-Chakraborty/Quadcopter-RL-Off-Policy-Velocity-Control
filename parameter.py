@@ -24,7 +24,7 @@ EVAL_DIR = f'{EXPERIMENT_DIR}/eval'
 # ------------------------------------------------------------------
 
 SUMMARY_WINDOW = 10
-LOAD_MODEL = False
+LOAD_MODEL = True
 SAVE_IMG_GAP = 5000
 CHECKPOINT_EVERY = 2500
 SAVE_BUFFER_EVERY = 2500        # save full replay buffer every N episodes (overwrites buffer_latest.pkl)
