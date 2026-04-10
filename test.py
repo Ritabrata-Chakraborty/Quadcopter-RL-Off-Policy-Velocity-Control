@@ -32,7 +32,7 @@ from parameter import (
     STATE_SIZE,
     TENSORBOARD_DIR,
 )
-from utils import compute_lowess, extract_tensorboard_metrics, save_navigation_episode_outputs
+from utils import compute_ema, extract_tensorboard_metrics, save_navigation_episode_outputs
 
 # ------------------------------------------------------------------
 # Global configuration
@@ -202,9 +202,9 @@ def save_training_plots(metrics: dict, eval_dir: str) -> None:
         for metric_name, (steps, vals) in losses.items():
             row, col = ax_idx // cols, ax_idx % cols
             ax = axes[row, col] if axes.ndim > 1 else axes[ax_idx]
-            lowess_vals = compute_lowess(steps, vals, frac=0.05)
+            ema_vals = compute_ema(vals, alpha=0.0025)
             ax.plot(steps, vals, linewidth=0.8, color='#CCCCCC', alpha=0.6, label='Raw')
-            ax.plot(steps, lowess_vals, linewidth=2.5, color='#1565C0', label='LOWESS')
+            ax.plot(steps, ema_vals, linewidth=1.2, color='#1565C0', label='EMA')
             ax.set_xlabel('Episode')
             ax.set_ylabel('Loss')
             ax.set_title(metric_name, fontweight='bold')
@@ -244,10 +244,10 @@ def save_training_plots(metrics: dict, eval_dir: str) -> None:
         for metric_name, (steps, vals) in perf_metrics.items():
             row, col = ax_idx // cols, ax_idx % cols
             ax = axes[row, col] if axes.ndim > 1 else axes[ax_idx]
-            lowess_vals = compute_lowess(steps, vals, frac=0.1)
+            ema_vals = compute_ema(vals, alpha=0.0025)
             color = colors[ax_idx % len(colors)]
             ax.plot(steps, vals, linewidth=0.8, color='#CCCCCC', alpha=0.6, label='Raw')
-            ax.plot(steps, lowess_vals, linewidth=2.5, color=color, label='LOWESS')
+            ax.plot(steps, ema_vals, linewidth=1.2, color=color, label='EMA')
             ax.set_xlabel('Episode')
             ax.set_ylabel('Value')
             ax.set_title(metric_name, fontweight='bold')

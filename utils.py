@@ -335,12 +335,15 @@ class PrioritizedReplayBuffer:
 # Training metrics helpers (TensorBoard + LOWESS)
 # ------------------------------------------------------------------
 
-def compute_lowess(x: np.ndarray, y: np.ndarray, frac: float = 0.1) -> np.ndarray:
-    """LOWESS smoothing over (x, y); returns smoothed y values."""
-    from statsmodels.nonparametric.smoothers_lowess import lowess
-    if len(y) < 3:
+def compute_ema(y: np.ndarray, alpha: float = 0.0025) -> np.ndarray:
+    """Exponential Moving Average smoothing."""
+    if len(y) < 1:
         return y
-    return lowess(y, x, frac=frac, it=3, delta=0.0)[:, 1]
+    ema = np.zeros_like(y, dtype=np.float64)
+    ema[0] = y[0]
+    for i in range(1, len(y)):
+        ema[i] = alpha * y[i] + (1 - alpha) * ema[i - 1]
+    return ema
 
 
 def extract_tensorboard_metrics(tensorboard_dir: str) -> dict[str, list[tuple]]:

@@ -6,6 +6,7 @@ networks centrally, and logs to TensorBoard / wandb.
 
 import gc
 import os
+import pickle
 from typing import Optional
 
 import numpy as np
@@ -23,6 +24,7 @@ from parameter import (
     BATCH_SIZE,
     CHECKPOINT_DIR,
     CHECKPOINT_EVERY,
+    SAVE_BUFFER_EVERY,
     EXPERIMENT_DIR,
     EXPERIMENT_NAME,
     EXPERIMENT_TYPE,
@@ -94,6 +96,8 @@ def save_checkpoint(
         checkpoint["log_alpha"] = log_alpha.detach().cpu()
     if alpha_optimizer is not None:
         checkpoint["alpha_optimizer"] = alpha_optimizer.state_dict()
+    named_path = os.path.join(CHECKPOINT_DIR, f'{episode}.pth')
+    torch.save(checkpoint, named_path)
     torch.save(checkpoint, os.path.join(CHECKPOINT_DIR, 'latest.pth'))
 
 
@@ -279,6 +283,15 @@ def main() -> None:
         curr_episode = checkpoint['episode']
         total_steps = checkpoint.get('total_steps', 0)
         print(f"Resumed from episode {curr_episode}")
+
+        # Load buffer if it exists
+        buffer_path = os.path.join(CHECKPOINT_DIR, 'buffer_latest.pkl')
+        if os.path.exists(buffer_path):
+            with open(buffer_path, 'rb') as f:
+                replay_buffer = pickle.load(f)
+            print(f"Loaded replay buffer ({replay_buffer.get_length()} transitions)")
+        else:
+            print(f"Buffer not found at {buffer_path}; starting with fresh buffer")
 
     # Launch Ray workers
     meta_agents = [RLRunner.remote(i) for i in range(NUM_META_AGENT)]
@@ -593,6 +606,12 @@ def main() -> None:
                     curr_episode, total_steps,
                     log_alpha=log_alpha, alpha_optimizer=alpha_optimizer,
                 )
+
+            if curr_episode % SAVE_BUFFER_EVERY == 0:
+                buffer_path = os.path.join(CHECKPOINT_DIR, 'buffer_latest.pkl')
+                with open(buffer_path, 'wb') as f:
+                    pickle.dump(replay_buffer, f)
+                print(f'Saved replay buffer ({replay_buffer.get_length()} transitions) -> {buffer_path}')
 
     except KeyboardInterrupt:
         print("CTRL+C pressed. Killing remote workers")

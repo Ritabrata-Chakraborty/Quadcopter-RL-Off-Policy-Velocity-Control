@@ -27,6 +27,7 @@ env/
 # Experiments
 experiments/
 experiments.bak/
+research/
 
 # OS
 .DS_Store

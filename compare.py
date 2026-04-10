@@ -21,7 +21,7 @@ import numpy as np
 
 matplotlib.use('Agg')
 
-from utils import compute_lowess, extract_tensorboard_metrics
+from utils import compute_ema, extract_tensorboard_metrics
 
 
 # ------------------------------------------------------------------
@@ -119,8 +119,8 @@ def save_comparison_plot(
             steps, vals = runs_data[run_name]
             color = color_map[run_name]
             ax.plot(steps, vals, linewidth=0.5, alpha=0.15, color=color)
-            ax.plot(steps, compute_lowess(steps, vals, frac=0.1),
-                    linewidth=2.5, label=run_name, color=color)
+            ax.plot(steps, compute_ema(vals, alpha=0.0025),
+                    linewidth=1.2, label=run_name, color=color)
 
         ax.set_xlabel('Episode')
         ax.set_ylabel(ylabel)
@@ -224,7 +224,7 @@ def main() -> None:
     args = parser.parse_args()
 
     experiments_dir = 'experiments'
-    output_dir = 'experiments/comparison'
+    output_dir = 'experiments'
     tensorboard_dirs = find_tensorboard_dirs(experiments_dir, args.pattern)
 
     if not tensorboard_dirs:
