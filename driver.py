@@ -22,6 +22,7 @@ from model import Actor, Critic, DDPGCritic, MultiCritic, MultiDDPGCritic, SACAc
 from parameter import (
     ACTION_SIZE,
     BATCH_SIZE,
+    BUFFER_DIR,
     CHECKPOINT_DIR,
     CHECKPOINT_EVERY,
     SAVE_BUFFER_EVERY,
@@ -67,6 +68,19 @@ def get_weights(actor: nn.Module, device: torch.device, local_device: torch.devi
     return [weights]
 
 
+def save_buffer(replay_buffer, episode: int) -> None:
+    os.makedirs(BUFFER_DIR, exist_ok=True)
+    named_path = os.path.join(BUFFER_DIR, f'{episode}.pkl')
+    latest_path = os.path.join(BUFFER_DIR, 'latest.pkl')
+    print(f'Saving replay buffer (episode {episode}, {replay_buffer.get_length()} transitions)')
+    for dest in (named_path, latest_path):
+        tmp = dest + '.tmp'
+        with open(tmp, 'wb') as f:
+            pickle.dump(replay_buffer, f)
+        os.replace(tmp, dest)
+    print(f'Buffer saved -> {named_path} and latest.pkl')
+
+
 def save_checkpoint(
     actor: nn.Module,
     critic: nn.Module,
@@ -96,9 +110,18 @@ def save_checkpoint(
         checkpoint["log_alpha"] = log_alpha.detach().cpu()
     if alpha_optimizer is not None:
         checkpoint["alpha_optimizer"] = alpha_optimizer.state_dict()
+
+    # Save with atomic writes: write to temp file, then rename
     named_path = os.path.join(CHECKPOINT_DIR, f'{episode}.pth')
-    torch.save(checkpoint, named_path)
-    torch.save(checkpoint, os.path.join(CHECKPOINT_DIR, 'latest.pth'))
+    named_tmp = named_path + '.tmp'
+    torch.save(checkpoint, named_tmp)
+    os.replace(named_tmp, named_path)
+
+    latest_path = os.path.join(CHECKPOINT_DIR, 'latest.pth')
+    latest_tmp = latest_path + '.tmp'
+    torch.save(checkpoint, latest_tmp)
+    os.replace(latest_tmp, latest_path)
+    print(f'Checkpoint saved successfully to {named_path} and latest.pth')
 
 
 def log_metrics(
@@ -284,14 +307,23 @@ def main() -> None:
         total_steps = checkpoint.get('total_steps', 0)
         print(f"Resumed from episode {curr_episode}")
 
-        # Load buffer if it exists
-        buffer_path = os.path.join(CHECKPOINT_DIR, 'buffer_latest.pkl')
-        if os.path.exists(buffer_path):
+        # Load buffer: prefer episode-matched file, fall back to latest
+        os.makedirs(BUFFER_DIR, exist_ok=True)
+        named_buf = os.path.join(BUFFER_DIR, f'{curr_episode}.pkl')
+        latest_buf = os.path.join(BUFFER_DIR, 'latest.pkl')
+        if os.path.exists(named_buf):
+            buffer_path = named_buf
+        elif os.path.exists(latest_buf):
+            buffer_path = latest_buf
+            print(f"Warning: no buffer for episode {curr_episode}, loading latest.pkl (may be out of sync)")
+        else:
+            buffer_path = None
+        if buffer_path:
             with open(buffer_path, 'rb') as f:
                 replay_buffer = pickle.load(f)
-            print(f"Loaded replay buffer ({replay_buffer.get_length()} transitions)")
+            print(f"Loaded replay buffer ({replay_buffer.get_length()} transitions) from {buffer_path}")
         else:
-            print(f"Buffer not found at {buffer_path}; starting with fresh buffer")
+            print(f"No buffer found; starting with fresh buffer")
 
     # Launch Ray workers
     meta_agents = [RLRunner.remote(i) for i in range(NUM_META_AGENT)]
@@ -608,10 +640,7 @@ def main() -> None:
                 )
 
             if curr_episode % SAVE_BUFFER_EVERY == 0:
-                buffer_path = os.path.join(CHECKPOINT_DIR, 'buffer_latest.pkl')
-                with open(buffer_path, 'wb') as f:
-                    pickle.dump(replay_buffer, f)
-                print(f'Saved replay buffer ({replay_buffer.get_length()} transitions) -> {buffer_path}')
+                save_buffer(replay_buffer, curr_episode)
 
     except KeyboardInterrupt:
         print("CTRL+C pressed. Killing remote workers")
@@ -623,6 +652,7 @@ def main() -> None:
             curr_episode, total_steps,
             log_alpha=log_alpha, alpha_optimizer=alpha_optimizer,
         )
+        save_buffer(replay_buffer, curr_episode)
     finally:
         writer.close()
         if wandb_run:

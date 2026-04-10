@@ -15,6 +15,7 @@ EXPERIMENT_TYPE = 'DDPG'
 
 EXPERIMENT_DIR = f'experiments/{EXPERIMENT_NAME}'
 CHECKPOINT_DIR = f'{EXPERIMENT_DIR}/train/checkpoints'
+BUFFER_DIR = f'{EXPERIMENT_DIR}/train/buffer'
 TENSORBOARD_DIR = f'{EXPERIMENT_DIR}/train/tensorboard'
 TRAIN_PLOTS_DIR = f'{EXPERIMENT_DIR}/train/plots'
 EVAL_DIR = f'{EXPERIMENT_DIR}/eval'
