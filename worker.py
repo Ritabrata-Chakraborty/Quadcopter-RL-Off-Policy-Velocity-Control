@@ -10,6 +10,19 @@ from env import QuadNavEnv
 from parameter import MAX_EPISODE_STEP
 
 
+def compute_stability(velocities: np.ndarray) -> float:
+    """Compute episode stability from normalized velocity history (jerk-based)."""
+    if len(velocities) < 3:
+        return 1.0
+
+    accelerations = np.diff(velocities, axis=0)
+    jerks = np.diff(accelerations, axis=0)
+    jerk_mag = np.linalg.norm(jerks, axis=1)
+
+    stability_score = np.mean(np.exp(-jerk_mag)) if len(jerk_mag) > 0 else 1.0
+    return float(stability_score)
+
+
 class Worker:
     """Runs a single episode, collecting transitions and optional visualization data."""
 
@@ -52,6 +65,7 @@ class Worker:
         done = False
         total_reward = 0.0
         info = {}
+        velocities = []  # Track [v_x, v_y, yaw_rate] for stability
 
         if self.save_image:
             self.trajectory = [(self.env.quad.pos[0], self.env.quad.pos[1], self.env.quad.pos[2])]
@@ -72,6 +86,12 @@ class Worker:
                 action = self.agent.get_action(state, is_training=True, step=self.policy_episode)
 
             next_state, reward, done, info = self.env.step(action)
+
+            # Track normalized velocities for stability computation
+            v_x = 2.0 * action[0] - 1.0   # [ 0, 1] -> [-1, 1]
+            v_y = action[1]               # [-1, 1] -> [-1, 1]
+            v_yaw = action[2]             # [-1, 1] -> [-1, 1]
+            velocities.append([v_x, v_y, v_yaw])
 
             self.episode_buffer.append((
                 state.copy(),
@@ -97,6 +117,8 @@ class Worker:
             if done:
                 break
 
+        stability = compute_stability(np.array(velocities)) if velocities else 1.0
+
         self.perf_metrics = {
             'travel_dist': self.env.travel_dist,
             'total_reward': total_reward,
@@ -104,6 +126,7 @@ class Worker:
             'crash_rate': float(info.get('crash', False)),
             'timeout_rate': float(info.get('timeout', False)),
             'goal_distance': float(np.linalg.norm(self.env.goal_pos - self.env.quad.pos[0:2])),
+            'stability': stability,
             'goal_pos': self.env.goal_pos.copy(),
             'start_pos': self.env.start_pos.copy(),
             'start_corner_pixels': getattr(self.env, 'start_corner_pixels', None),

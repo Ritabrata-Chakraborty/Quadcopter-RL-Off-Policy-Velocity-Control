@@ -142,11 +142,11 @@ def log_metrics(
         num_critics = P.NUM_CRITICS
         individual_losses = means[2:2+num_critics]
         perf_start_idx = 2 + num_critics
-        travel_dist, success_rate, total_reward, goal_distance, crash_rate, timeout_rate = \
-            means[perf_start_idx:perf_start_idx+6]
+        travel_dist, success_rate, total_reward, goal_distance, crash_rate, timeout_rate, stability = \
+            means[perf_start_idx:perf_start_idx+7]
     else:
         critic_loss, actor_loss, travel_dist, success_rate, total_reward, goal_distance, \
-            crash_rate, timeout_rate = means
+            crash_rate, timeout_rate, stability = means
 
     writer.add_scalar('Losses/Critic Loss', critic_loss, curr_episode)
     writer.add_scalar('Losses/Actor Loss', actor_loss, curr_episode)
@@ -161,6 +161,7 @@ def log_metrics(
     writer.add_scalar('Perf/Crash Rate', crash_rate, curr_episode)
     writer.add_scalar('Perf/Timeout Rate', timeout_rate, curr_episode)
     writer.add_scalar('Perf/Goal Distance', goal_distance, curr_episode)
+    writer.add_scalar('Perf/Stability', stability, curr_episode)
     writer.add_scalar('Perf/Buffer Size', buffer_size, curr_episode)
 
     if wandb_run:
@@ -176,6 +177,7 @@ def log_metrics(
             'Timeout Rate': timeout_rate,
             'Travel Distance': travel_dist,
             'Goal Distance': goal_distance,
+            'Stability': stability,
         }
 
         if USE_MULTI_CRITIC:
@@ -334,7 +336,7 @@ def main() -> None:
         curr_episode += 1
         job_list.append(meta_agent.job.remote(weights_set, curr_episode, training_active, 0))
 
-    metric_names = ['travel_dist', 'success_rate', 'total_reward', 'goal_distance', 'crash_rate', 'timeout_rate']
+    metric_names = ['travel_dist', 'success_rate', 'total_reward', 'goal_distance', 'crash_rate', 'timeout_rate', 'stability']
     perf_metrics = {n: [] for n in metric_names}
     training_data = []
 
