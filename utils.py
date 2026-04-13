@@ -335,7 +335,7 @@ class PrioritizedReplayBuffer:
 # Training metrics helpers (TensorBoard + LOWESS)
 # ------------------------------------------------------------------
 
-def compute_ema(y: np.ndarray, alpha: float = 0.0025) -> np.ndarray:
+def compute_ema(y: np.ndarray, alpha: float = 0.05) -> np.ndarray:
     """Exponential Moving Average smoothing."""
     if len(y) < 1:
         return y
@@ -808,12 +808,7 @@ def save_navigation_episode_outputs(
     gif_path = os.path.join(gifs_dir, f'{stem}.gif')
     with imageio.get_writer(gif_path, mode='I', duration=0.15) as gif_writer:
         for i in range(n_steps):
-            snap = lidar_snapshots[i]
-            if len(snap) == 3:
-                _, endpoints, kinds = snap
-            else:
-                _, endpoints = snap
-                kinds = None
+            _, endpoints, kinds = lidar_snapshots[i]
             fig = render_navigation_frame(
                 ground_truth, belief_snapshots[i], traj_xy, trajectory_yaw,
                 goal_pos, start_pos, endpoints, i, n_steps, metrics, episode,
@@ -832,12 +827,7 @@ def save_navigation_episode_outputs(
             plt.close(fig)
 
     # Final frame as PNG
-    last_snap = lidar_snapshots[-1]
-    if len(last_snap) == 3:
-        _, last_endpoints, last_kinds = last_snap
-    else:
-        _, last_endpoints = last_snap
-        last_kinds = None
+    _, last_endpoints, last_kinds = lidar_snapshots[-1]
     fig_final = render_navigation_frame(
         ground_truth, belief_snapshots[-1], traj_xy, trajectory_yaw,
         goal_pos, start_pos, last_endpoints, n_steps - 1, n_steps, metrics, episode,

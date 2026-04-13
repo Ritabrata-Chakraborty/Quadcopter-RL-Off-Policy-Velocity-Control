@@ -6,7 +6,7 @@ import math
 # Experiment identity
 # ------------------------------------------------------------------
 
-EXPERIMENT_NAME = 'TD3-PER'
+EXPERIMENT_NAME = 'TD3'
 EXPERIMENT_TYPE = 'TD3'
 
 # ------------------------------------------------------------------
@@ -64,38 +64,38 @@ TAU = 0.001                         # slower target tracking; more stable with l
 NUM_META_AGENT = 8
 
 # ------------------------------------------------------------------
-# TD3
+# Twin Delayed DDPG (TD3)
 # ------------------------------------------------------------------
 
-if EXPERIMENT_TYPE == 'TD3':
-    POLICY_NOISE = 0.2
-    POLICY_NOISE_CLIP = 0.5
-    POLICY_UPDATE_FREQUENCY = 2
+POLICY_NOISE = 0.2                  # noise clipping for target policy smoothing
+POLICY_NOISE_CLIP = 0.5             # clipping range for smoothing noise
+POLICY_UPDATE_FREQUENCY = 2         # delayed: actor updates every 2 critic steps
 
 # ------------------------------------------------------------------
-# DDPG
+# DDPG (Deterministic Policy Gradient)
 # ------------------------------------------------------------------
 
 if EXPERIMENT_TYPE == 'DDPG':
-    POLICY_UPDATE_FREQUENCY = 1   # actor updates every step (no delay)
+    POLICY_UPDATE_FREQUENCY = 1     # no delay: actor updates every step
 
 # ------------------------------------------------------------------
-# SAC
+# SAC (Soft Actor-Critic)
 # ------------------------------------------------------------------
+
+SAC_ALPHA_INIT = 0.2                # initial entropy coefficient
+SAC_ALPHA_LR = 0.004                # learning rate for alpha optimization
+SAC_TARGET_ENTROPY = -ACTION_SIZE   # target: -(action_dim) = -3
 
 if EXPERIMENT_TYPE == 'SAC':
-    POLICY_UPDATE_FREQUENCY = 1
-    SAC_ALPHA_INIT = 0.2
-    SAC_ALPHA_LR = 0.004               # same as main LR
-    SAC_TARGET_ENTROPY = -ACTION_SIZE  # = -3
+    POLICY_UPDATE_FREQUENCY = 1     # no delay: entropy regularization handles variance
 
 # ------------------------------------------------------------------
-# OU Noise
+# OU Noise (TD3 / DDPG only)
 # ------------------------------------------------------------------
 
-OU_NOISE_MAX_SIGMA = 0.2            # reduced from 0.3; environment not exploration-starved
-OU_NOISE_MIN_SIGMA = 0.05
-OU_NOISE_DECAY_EPISODES = 3_000     # reduced from 15_000; old DDPG converged at ~273 policy episodes
+OU_NOISE_MAX_SIGMA = 0.2            # initial exploration scale
+OU_NOISE_MIN_SIGMA = 0.05           # final exploration scale (near convergence)
+OU_NOISE_DECAY_EPISODES = 3_000     # episodes over which sigma decays linearly
 
 # ------------------------------------------------------------------
 # Environment
@@ -160,7 +160,7 @@ NUM_CRITICS = 3            # only used when USE_MULTI_CRITIC is True
 # Prioritized Experience Replay
 # ------------------------------------------------------------------
 
-USE_PER = True                     # set True to enable PER, False keeps uniform sampling
+USE_PER = False                    # set True to enable PER, False keeps uniform sampling
 PER_ALPHA = 0.6                    # prioritization exponent (0=uniform, 1=full); only used if USE_PER=True
 PER_BETA_START = 0.4               # initial IS exponent, anneals to 1.0
 PER_BETA_FRAMES = 3_000 * 2        # 6K gradient steps; matches ~3000 policy episodes (post-fix convergence window)

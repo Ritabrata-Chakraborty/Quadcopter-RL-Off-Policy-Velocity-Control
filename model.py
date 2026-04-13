@@ -237,4 +237,4 @@ class MultiDDPGCritic(nn.Module):
         return [c(states, actions) for c in self.critics]
 
     def Q1_forward(self, states: torch.Tensor, actions: torch.Tensor) -> torch.Tensor:
-        return sum(c(states, actions) for c in self.critics)
+        return sum(c.Q1_forward(states, actions) for c in self.critics)

@@ -87,11 +87,7 @@ class Worker:
 
             next_state, reward, done, info = self.env.step(action)
 
-            # Track normalized velocities for stability computation
-            v_x = 2.0 * action[0] - 1.0   # [ 0, 1] -> [-1, 1]
-            v_y = action[1]               # [-1, 1] -> [-1, 1]
-            v_yaw = action[2]             # [-1, 1] -> [-1, 1]
-            velocities.append([v_x, v_y, v_yaw])
+            velocities.append(action.tolist())
 
             self.episode_buffer.append((
                 state.copy(),

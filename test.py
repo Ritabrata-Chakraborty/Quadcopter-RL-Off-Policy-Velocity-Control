@@ -86,7 +86,6 @@ def run_eval_episode(agent: Agent, env: QuadNavEnv, record: bool = True) -> tupl
     for step in range(MAX_EPISODE_STEP):
         action = agent.get_action(state, is_training=False)
         state, reward, done, info_dict = env.step(action)
-        # Handle both single-critic (scalar) and multi-critic (array) rewards
         reward_scalar = float(np.sum(reward)) if isinstance(reward, np.ndarray) else float(reward)
         total_reward += reward_scalar
         if record:
@@ -202,7 +201,7 @@ def save_training_plots(metrics: dict, eval_dir: str) -> None:
         for metric_name, (steps, vals) in losses.items():
             row, col = ax_idx // cols, ax_idx % cols
             ax = axes[row, col] if axes.ndim > 1 else axes[ax_idx]
-            ema_vals = compute_ema(vals, alpha=0.0025)
+            ema_vals = compute_ema(vals, alpha=0.05)
             ax.plot(steps, vals, linewidth=0.8, color='#CCCCCC', alpha=0.6, label='Raw')
             ax.plot(steps, ema_vals, linewidth=1.2, color='#1565C0', label='EMA')
             ax.set_xlabel('Episode')
@@ -244,7 +243,7 @@ def save_training_plots(metrics: dict, eval_dir: str) -> None:
         for metric_name, (steps, vals) in perf_metrics.items():
             row, col = ax_idx // cols, ax_idx % cols
             ax = axes[row, col] if axes.ndim > 1 else axes[ax_idx]
-            ema_vals = compute_ema(vals, alpha=0.0025)
+            ema_vals = compute_ema(vals, alpha=0.05)
             color = colors[ax_idx % len(colors)]
             ax.plot(steps, vals, linewidth=0.8, color='#CCCCCC', alpha=0.6, label='Raw')
             ax.plot(steps, ema_vals, linewidth=1.2, color=color, label='EMA')

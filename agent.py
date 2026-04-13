@@ -18,6 +18,7 @@ class Agent:
         self.device = device
         self.actor_net = actor_net
         self.algorithm = EXPERIMENT_TYPE
+        self.noise = None
 
         if self.algorithm in ('TD3', 'DDPG'):
             self.noise = OUNoise(
