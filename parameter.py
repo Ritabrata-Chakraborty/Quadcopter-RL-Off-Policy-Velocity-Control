@@ -6,8 +6,8 @@ import math
 # Experiment identity
 # ------------------------------------------------------------------
 
-EXPERIMENT_NAME = 'TD3'
-EXPERIMENT_TYPE = 'TD3'
+EXPERIMENT_NAME = 'SAC-MC'
+EXPERIMENT_TYPE = 'SAC'
 
 # ------------------------------------------------------------------
 # Directory structure
@@ -25,7 +25,7 @@ EVAL_DIR = f'{EXPERIMENT_DIR}/eval'
 # ------------------------------------------------------------------
 
 SUMMARY_WINDOW = 10
-LOAD_MODEL = False
+LOAD_MODEL = True
 SAVE_IMG_GAP = 5000
 CHECKPOINT_EVERY = 5000
 SAVE_BUFFER_EVERY = 5000        # save full replay buffer every N episodes (overwrites buffer_latest.pkl)
@@ -153,7 +153,7 @@ SPEED_ANGULAR_MAX = math.radians(60)
 # Multi-Critic
 # ------------------------------------------------------------------
 
-USE_MULTI_CRITIC = False   # True: 3 separate critics; False: single-critic baseline
+USE_MULTI_CRITIC = True    # True: 3 separate critics; False: single-critic baseline
 NUM_CRITICS = 3            # only used when USE_MULTI_CRITIC is True
 
 # ------------------------------------------------------------------

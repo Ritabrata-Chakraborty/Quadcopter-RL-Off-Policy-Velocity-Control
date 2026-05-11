@@ -380,7 +380,7 @@ def main() -> None:
     # Resume from checkpoint
     if LOAD_MODEL:
         latest_ckpt = os.path.join(CHECKPOINT_DIR, 'latest.pth')
-        checkpoint = torch.load(latest_ckpt, map_location=device)
+        checkpoint = torch.load(latest_ckpt, map_location=device, weights_only=False)
         episode_num = checkpoint['episode']
         # Prefer numbered checkpoint (safer than latest.pth which can corrupt mid-write)
         numbered_ckpt = os.path.join(CHECKPOINT_DIR, f'{episode_num}.pth')
@@ -389,7 +389,7 @@ def main() -> None:
         else:
             ckpt = latest_ckpt
         print(f'Loading model from {ckpt}...')
-        checkpoint = torch.load(ckpt, map_location=device)
+        checkpoint = torch.load(ckpt, map_location=device, weights_only=False)
         if checkpoint.get('multi_critic', False) != USE_MULTI_CRITIC:
             raise ValueError(
                 f"Checkpoint has multi_critic={checkpoint.get('multi_critic', False)} "
@@ -413,9 +413,15 @@ def main() -> None:
         if 'np_rng_state' in checkpoint:
             np.random.set_state(checkpoint['np_rng_state'])
         if 'torch_rng_state' in checkpoint:
-            torch.set_rng_state(checkpoint['torch_rng_state'])
+            rng_state = checkpoint['torch_rng_state']
+            if isinstance(rng_state, torch.Tensor):
+                rng_state = rng_state.cpu().to(dtype=torch.uint8)
+            torch.set_rng_state(rng_state)
         if 'cuda_rng_state' in checkpoint and torch.cuda.is_available():
-            torch.cuda.set_rng_state(checkpoint['cuda_rng_state'])
+            cuda_rng_state = checkpoint['cuda_rng_state']
+            if isinstance(cuda_rng_state, torch.Tensor):
+                cuda_rng_state = cuda_rng_state.cpu().to(dtype=torch.uint8)
+            torch.cuda.set_rng_state(cuda_rng_state)
         print(f"Resumed from episode {curr_episode}")
 
         # Load buffer: prefer episode-matched file, fall back to latest

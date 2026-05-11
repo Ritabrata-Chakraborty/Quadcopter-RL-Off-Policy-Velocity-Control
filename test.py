@@ -50,7 +50,7 @@ def load_checkpoint(checkpoint_path: str, device: torch.device) -> tuple:
         actor = SACActor(STATE_SIZE, ACTION_SIZE, HIDDEN_SIZE).to(device)
     else:
         actor = Actor(STATE_SIZE, ACTION_SIZE, HIDDEN_SIZE).to(device)
-    checkpoint = torch.load(checkpoint_path, map_location=device)
+    checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=False)
     actor.load_state_dict(checkpoint['actor_model'])
     actor.eval()
     episode = checkpoint.get('episode', '?')
